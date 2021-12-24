@@ -63,7 +63,7 @@ public class ActualizarMangaActivity extends AppCompatActivity {
         Thread th = new Thread(() -> {
             try {
                 md = MangaScrapper.ObtenerDatosDe(mangaActualizar.getId());
-            } catch (IOException | ParseException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         });

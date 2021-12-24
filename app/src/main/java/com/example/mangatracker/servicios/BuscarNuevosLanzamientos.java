@@ -167,9 +167,6 @@ public class BuscarNuevosLanzamientos extends Service {
             } catch (IOException e) {
                 e.printStackTrace();
                 mensaje += e.getMessage() + "\n";
-            } catch (ParseException e) {
-                e.printStackTrace();
-                mensaje += e.getMessage() + "\n";
             } catch (NoSuchMethodError e){
                 Log.e(TAG, "Joder");
                 e.printStackTrace();
