@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.mangatracker">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <application
+        android:name="androidx.multidex.MultiDexApplication"
+        android:allowBackup="true"
+        android:icon="@drawable/manga"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/manga"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MangaTracker">
+        <activity
+            android:name=".ScrollingActivity"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.MangaTracker.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".AddMangaActivity"
+            android:theme="@style/Theme.MangaTracker"
+            android:label="Añadir mangas"/>
+        <activity android:name=".ActualizarMangaActivity"
+            android:theme="@style/Theme.MangaTracker"
+            android:label=""
+            />
+        <activity android:name=".NuevosLanzamientosActivity"
+            android:theme="@style/Theme.MangaTracker.NoActionBar"
+            android:label="Nuevos lanzamientos"
+            />
+        <activity android:name=".PreferenciasActivity"
+            android:label="Preferencias"
+            />
+
+        <service
+            android:name = ".servicios.BuscarNuevosLanzamientos"
+            android:label = "@string/app_name">
+            <intent-filter>
+                <action
+                    android:name = "com.example.mangatracker.servicios.BuscarNuevosLanzamientos" />
+                <category android:name = "android.intent.category.DEFAULT" />
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name=".broadcast.NuevosLanzamientosBroadcastReceiver">
+            <intent-filter>
+                <action android:name="android.media.action.DISPLAY_NOTIFICATION" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
+    </application>
+
+</manifest>

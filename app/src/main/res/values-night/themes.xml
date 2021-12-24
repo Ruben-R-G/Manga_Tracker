@@ -1,0 +1,43 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.MangaTracker" parent="Theme.MaterialComponents.Light.DarkActionBar">
+<!--        &lt;!&ndash; Primary brand color. &ndash;&gt;-->
+<!--        <item name="colorPrimary">@color/purple_200</item>-->
+<!--        <item name="colorPrimaryVariant">@color/purple_700</item>-->
+<!--        <item name="colorOnPrimary">@color/black</item>-->
+<!--        &lt;!&ndash; Secondary brand color. &ndash;&gt;-->
+<!--        <item name="colorSecondary">@color/teal_200</item>-->
+<!--        <item name="colorSecondaryVariant">@color/teal_200</item>-->
+<!--        <item name="colorOnSecondary">@color/black</item>-->
+<!--        &lt;!&ndash; Status bar color. &ndash;&gt;-->
+<!--        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>-->
+<!--        &lt;!&ndash; Customize your theme here. &ndash;&gt;-->
+<!--    </style>-->
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/purple_500</item>
+        <item name="colorPrimaryVariant">@color/purple_700</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/teal_200</item>
+        <item name="colorSecondaryVariant">@color/teal_700</item>
+        <item name="colorOnSecondary">@color/grey</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
+        <!-- Customize your theme here. -->
+        <item name="android:editTextColor">@color/teal_700</item>
+    </style>
+
+    <style name="Theme.MangaTracker.NoActionBar" parent="Theme.MangaTracker">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="Theme.MangaTracker.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="Theme.MangaTracker.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="Theme.MangaTracker.ActionBarSinTitulo" parent="Theme.MangaTracker">
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">true</item>
+    </style>
+</resources>
