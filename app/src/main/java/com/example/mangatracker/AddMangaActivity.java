@@ -1,10 +1,7 @@
 package com.example.mangatracker;
 
 import android.Manifest;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.os.StrictMode;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -13,20 +10,15 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.mangatracker.Excepciones.NumeroMangasException;
 import com.example.mangatracker.adapters.AdaptadorRecycler;
 import com.example.mangatracker.casosuso.CambioActividades;
 import com.example.mangatracker.clases.Manga;
 import com.example.mangatracker.databinding.AddMangaBinding;
-import com.example.mangatracker.pruebas.Pruebas;
-import com.google.android.material.snackbar.Snackbar;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -35,9 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import clases.MangaBusqueda;
-import clases.MangaDatos;
 import operaciones.BuscarManga;
-import operaciones.MangaScrapper;
 
 public class AddMangaActivity extends AppCompatActivity {
     AddMangaBinding binding;
@@ -84,8 +74,11 @@ public class AddMangaActivity extends AppCompatActivity {
             StrictMode.setThreadPolicy(policy);
 
             try {
-                MangaBusqueda[] mangasEncontrados = BuscarManga.BuscarPorNombreManga(busqueda.getText().toString());
+                MangaBusqueda[] mangasEncontrados =
+                        BuscarManga.BuscarPorNombreManga(busqueda.getText().toString());
+
                 mangas = new ArrayList<>();
+
                 for(MangaBusqueda mBuscado : mangasEncontrados)
                 {
                     Manga m = new Manga(mBuscado.getId(), mBuscado.getNombre());
@@ -113,7 +106,8 @@ public class AddMangaActivity extends AppCompatActivity {
     }
 
     private void OperacionesRV() {
-        binding.addMangaRecycler.setAdapter(new AdaptadorRecycler(AdaptadorRecycler.TIPOADAPTER.AddManga,
+        binding.addMangaRecycler.setAdapter
+                (new AdaptadorRecycler(AdaptadorRecycler.TIPOADAPTER.AddManga,
                 new Manga[]{}));
         binding.addMangaRecycler.setLayoutManager(new LinearLayoutManager(this));
 
@@ -130,9 +124,11 @@ public class AddMangaActivity extends AppCompatActivity {
             @Override
             public boolean onInterceptTouchEvent(@NonNull @NotNull RecyclerView rv, @NonNull @NotNull MotionEvent e) {
                 View child = binding.addMangaRecycler.findChildViewUnder(e.getX(), e.getY());
+
                 //Compruebo que ha ocurrido un gesto y que el GD es true (es un tap)
                 if (child != null && gestureDetector.onTouchEvent(e)) {
                     int pos = binding.addMangaRecycler.getChildAdapterPosition(child);
+
                     new AlertDialog.Builder(AddMangaActivity.this)
                             .setMessage("¿Quieres añadir el manga " + mangas.get(pos).getNombre() + "?")
                             .setPositiveButton("Si", (dialog, which) -> {

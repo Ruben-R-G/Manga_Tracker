@@ -170,31 +170,28 @@ public class AdaptadorRecycler extends RecyclerView.Adapter<AdaptadorRecycler.Vi
         holder.getTomosComprados().setText(Integer.toString(mangas1.getTomosComprados()));
 
         holder.getBtnMasUno().setOnClickListener(v -> {
-            try {
-                mangas1.SumaRestaUno(true);
-                //Pruebas.getMangasAdded().removeIf(m -> m.getNombre().equals(mangas1));
-                //Pruebas.getMangasAdded().add(mangas1);
-                AddedMangasDB.ActualizarManga(mangas1);
-                notifyDataSetChanged();
-            } catch (NumeroMangasException e) {
-                e.printStackTrace();
-            }
+            CambiarTomosComprados(mangas1, true);
         });
         holder.getBtnMenosUno().setOnClickListener(v -> {
-            try {
-                mangas1.SumaRestaUno(false);
-                //Pruebas.getMangasAdded().removeIf(m -> m.getNombre().equals(mangas1));
-                //Pruebas.getMangasAdded().add(mangas1);
-                AddedMangasDB.ActualizarManga(mangas1);
-                notifyDataSetChanged();
-            } catch (NumeroMangasException e) {
-                e.printStackTrace();
-            }
+            CambiarTomosComprados(mangas1, false);
         });
         holder.getBtnEditar().setOnClickListener(v -> {
             CambioActividades.CambioActualizarManga(v.getContext(), "ScrollingActivity",
                     mangas1);
         });
+    }
+
+    //true si se suma, false si se resta
+    private void CambiarTomosComprados(Manga mangas1, boolean b) {
+        try {
+            mangas1.SumaRestaUno(b);
+            //Pruebas.getMangasAdded().removeIf(m -> m.getNombre().equals(mangas1));
+            //Pruebas.getMangasAdded().add(mangas1);
+            AddedMangasDB.ActualizarManga(mangas1);
+            notifyDataSetChanged();
+        } catch (NumeroMangasException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

@@ -2,15 +2,11 @@ package com.example.mangatracker;
 
 import android.os.Build;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -19,13 +15,13 @@ import com.example.mangatracker.adapters.AdaptadorRecycler;
 import com.example.mangatracker.casosuso.CambioActividades;
 import com.example.mangatracker.databinding.NuevosLanzamientosActivityBinding;
 import com.example.mangatracker.db.AddedMangasDB;
-import com.example.mangatracker.pruebas.Pruebas;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class NuevosLanzamientosActivity extends AppCompatActivity {
     private NuevosLanzamientosActivityBinding binding;
     private RecyclerView rv;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

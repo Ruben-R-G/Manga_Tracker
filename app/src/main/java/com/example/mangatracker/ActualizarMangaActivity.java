@@ -19,7 +19,6 @@ import com.example.mangatracker.constantes.Constantes;
 import com.example.mangatracker.databinding.ActualizarMangaBinding;
 import com.example.mangatracker.db.AddedMangasDB;
 import java.io.IOException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import clases.MangaDatos;
 import operaciones.MangaScrapper;
@@ -29,6 +28,7 @@ public class ActualizarMangaActivity extends AppCompatActivity {
     private Manga mangaActualizar;
     private String actividadPadre; //Para comprobar la actividad que ha lanzado esta
     private final String TAG = Constantes.TAG_APP + "AMA";
+
     //Componentes layout
     private TextView txtNombre;
     private TextView txtTomosEditados;
@@ -69,7 +69,7 @@ public class ActualizarMangaActivity extends AppCompatActivity {
         });
         th.start();
         th.join();
-        //MangaDatos md = MangaScrapper.ObtenerDatosDe(mangaActualizar.getId());
+
         if(md == null)
         {
             new AlertDialog.Builder(this)
@@ -100,18 +100,9 @@ public class ActualizarMangaActivity extends AppCompatActivity {
         txtTomosNoEditados = findViewById(R.id.actualizarmanga_txtVNoEditados);
         txtTomosNoEditados.append(Integer.toString(mangaActualizar.getTomosNoEditados()));
 
-        //todo poder cambiar el texto en el editText (salta excepcion)
         etTomosComprados = findViewById(R.id.actualizarmanga_tomoscomprados);
         etTomosComprados.setText(mangaActualizar.getTomosComprados() == -1 ? "0" :
                 Integer.toString(mangaActualizar.getTomosComprados()));
-        //etTomosComprados.setText(mangaActualizar.getTomosComprados() == -1 ? 0 : mangaActualizar.getTomosComprados());
-//        etTomosComprados.setText(Integer.toString(mangaActualizar.getTomosComprados() == -1
-//                ? 0 : mangaActualizar.getTomosComprados()));
-        //binding.actualizarMangaTxtVNombre.setText(mangaActualizar.getNombre());
-        //binding.actualizarmangaTxtValaventa.append(Integer.toString(mangaActualizar.getTomosEditados()));
-        //binding.actualizarmangaTxtVenedicion.append(Integer.toString(mangaActualizar.getTomosEnPreparacion()));
-        //binding.actualizarmangaTxtVNoEditados.append(Integer.toString(mangaActualizar.getTomosNoEditados()));
-        //binding.actualizarmangaTomoscomprados.setText(mangaActualizar.getTomosComprados() == -1 ? 0: mangaActualizar.getTomosComprados());
 
     }
 
@@ -213,21 +204,4 @@ public class ActualizarMangaActivity extends AppCompatActivity {
         Toast.makeText(this, s, Toast.LENGTH_LONG).show();
     }
 
-//    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-//    private void GenerarNotificacion() {
-//        if(!PreferenceManager.getDefaultSharedPreferences(this)
-//                .getBoolean("notificaciones", false)) return;
-//
-//        //En lugar de destruirse, llamo de nuevo al BroadcastReceiver en x
-//        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 1,
-//                new Intent(this, NuevosLanzamientosBroadcastReceiver.class),
-//                PendingIntent.FLAG_UPDATE_CURRENT);
-//        AlarmManager alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-//            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
-//                    System.currentTimeMillis() + 1000, pendingIntent);
-//        else
-//            alarmManager.setExact(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000
-//                    , pendingIntent);
-//    }
 }

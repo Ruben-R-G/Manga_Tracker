@@ -44,14 +44,14 @@ public class BuscarNuevosLanzamientos extends Service {
     private Notificaciones notificaciones;
 
     @Override
-    public IBinder onBind (Intent arg0) {
+    public IBinder onBind(Intent arg0) {
         return null;
     }
 
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public void onCreate () {
+    public void onCreate() {
         try {
             notificaciones = new Notificaciones(this);
             AddedMangasDB.InstaciarBD(this);
@@ -59,9 +59,8 @@ public class BuscarNuevosLanzamientos extends Service {
             AddedMangasDB.ObtenerNuevosLanzamientos(true); //Se quedan a null las fechas que ya han pasado
             NuevosLanzamientos();
             notificaciones.LanzamientosPrueba();
-        }catch(Exception e)
-        {
-            Log.e(TAG, "EXCEPCION NO CONTROLADA: \n"+e.getMessage());
+        } catch (Exception e) {
+            Log.e(TAG, "EXCEPCION NO CONTROLADA: \n" + e.getMessage());
             mensaje += e.getMessage() + "\n";
         }
         CrearAlarma();
@@ -70,41 +69,41 @@ public class BuscarNuevosLanzamientos extends Service {
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void CrearAlarma() {
-        if(!PreferenceManager.getDefaultSharedPreferences(this)
+        if (!PreferenceManager.getDefaultSharedPreferences(this)
                 .getBoolean("notificaciones", false)) return;
 
 
         Calendar proximaNotificacion = Constantes.ObtenerProximaNotificacion();
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-        Log.d(TAG, "Proxima notificacion: "+ sdf.format(proximaNotificacion.getTime()));
+
+        Log.d(TAG, "Proxima notificacion: " + sdf.format(proximaNotificacion.getTime()));
+
         //En lugar de destruirse, llamo de nuevo al BroadcastReceiver en x
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 1,
                 new Intent(this, NuevosLanzamientosBroadcastReceiver.class),
                 PendingIntent.FLAG_UPDATE_CURRENT);
+
         AlarmManager alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
                     proximaNotificacion.getTimeInMillis(), pendingIntent);
-        }else
+        } else
             alarmManager.setExact(AlarmManager.RTC_WAKEUP,
                     proximaNotificacion.getTimeInMillis(), pendingIntent);
-
 
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
-    public void onDestroy () {
-        super.onDestroy() ;
-        Log.d(TAG ,"onDestroy" ) ;
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy");
     }
 
 
-    public void NuevosLanzamientos()
-    {
-        //                    PruebaNotificacion();
-
-        if(!PreferenceManager.getDefaultSharedPreferences(this)
+    public void NuevosLanzamientos() {
+        if (!PreferenceManager.getDefaultSharedPreferences(this)
                 .getBoolean("notificaciones", false)) return;
 
         /*
@@ -117,28 +116,25 @@ public class BuscarNuevosLanzamientos extends Service {
 
         //AddedMangasDB.InstaciarBD(this);
         Manga[] ms = AddedMangasDB.ActualizarNuevosLanzamientos();
-        if(ms.length == 0) return;
 
-        Log.d(TAG, "Hay "+ ms.length  +" mangas sin proxima fecha y sin finalizar");
+        if (ms.length == 0) return; //No hay mangas sin fecha, no actualizo nada
+
+        Log.d(TAG, "Hay " + ms.length + " mangas sin proxima fecha y sin finalizar");
 
         //Comprobacion de los nuevos lanzamientos (se actualizan también otros datos)
-        String [] mangasNotif = new String[2];
+        String[] mangasNotif = new String[2];
 
         Boolean MultiplesLanzamientos = false;
         int TotalNuevosLanzamientos = 0;
-        for(Manga m : ms)
-        {
+
+        for (Manga m : ms) {
             Manga NuevoLanz = new Manga(-1, "Nada nuevo");
 
             NuevoLanz.setId(m.getId());
             try {
-                //Si nada se ha roto, tambien actualizo los datos del manga
-                    MangaDatos nuevosDatos = MangaScrapper.ObtenerDatosDe(m.getId());
+                MangaDatos nuevosDatos = MangaScrapper.ObtenerDatosDe(m.getId());
 
                 NuevoLanz.setNombre(m.getNombre());
-
-
-
 
                 //Obtengo los datos actualizados y tambien los inserto
                 NuevoLanz.setTomosEditados(nuevosDatos.getTomosEditados());
@@ -152,7 +148,8 @@ public class BuscarNuevosLanzamientos extends Service {
 
                 AddedMangasDB.ActualizarManga(NuevoLanz);
 
-                if(nuevosDatos.getFecha() == null) continue;
+                //Si no se obtiene fecha, no cuenta como nuevo lanzamiento
+                if (nuevosDatos.getFecha() == null) continue;
 
                 NuevoLanz.setFecha(new SimpleDateFormat("dd-MM-yyyy")
                         .format(nuevosDatos.getFecha()));
@@ -160,53 +157,31 @@ public class BuscarNuevosLanzamientos extends Service {
 
                 TotalNuevosLanzamientos++;
 
-                if(TotalNuevosLanzamientos > 1) {
+                if (TotalNuevosLanzamientos > 1) {
                     MultiplesLanzamientos = true;
                     continue;
                 }
 
+                //Datos del manga que se mostrará en la notificación si es el único
                 mangasNotif[0] = NuevoLanz.getNombre();
                 mangasNotif[1] = NuevoLanz.getFecha();
 
             } catch (IOException e) {
                 e.printStackTrace();
                 mensaje += e.getMessage() + "\n";
-            } catch (NoSuchMethodError e){
+            } catch (NoSuchMethodError e) {
                 Log.e(TAG, "Joder");
                 e.printStackTrace();
                 mensaje += e.getMessage() + "\n";
-            } catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
                 mensaje += e.getMessage() + "\n";
             }
         }
-        if(TotalNuevosLanzamientos != 0)
-             notificaciones.createNotification(MultiplesLanzamientos, mangasNotif[0], mangasNotif[1]);
+        if (TotalNuevosLanzamientos != 0)
+            notificaciones.createNotification(MultiplesLanzamientos, mangasNotif[0], mangasNotif[1]);
 
     }
-
-
-
-    /*
-    private void PruebaNotificacion()
-    {
-if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) //Solo para versiones mayores que 26
-        {
-            String nombre = "Canal notificacion";
-            String descripcion = "Prueba de canal de notificacion";
-            int importancia = NotificationManager.IMPORTANCE_DEFAULT;
-
-            NotificationChannel canal = new NotificationChannel(CHANNEL_ID, nombre, importancia);
-            canal.setDescription(descripcion);
-
-            //Registrar el canal en el sistema
-            //A partir de aqui no se puede cambiar la importancia o comportamiento de la notificacion
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-
-            notificationManager.createNotificationChannel(canal);
-        }    }
-*/
-
 
 }
 

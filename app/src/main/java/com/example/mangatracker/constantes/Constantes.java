@@ -3,7 +3,7 @@ package com.example.mangatracker.constantes;
 import java.util.Calendar;
 
 public class Constantes {
-    public static final boolean debug = false;
+    public static final boolean debug = false; //true para que en lugar de ir por horas, vaya por minutos
     public static final String TAG_APP = "MangaTracker - ";
     public static final String CHANNEL_ID = "NuevosLanzamientosChannel";
     public static final int[] horasNotificaciones = {9, 13, 19};
@@ -26,7 +26,7 @@ public class Constantes {
                 }
             }
 
-            //Sale del bucle, no hay horas ara este dia, añadimos un dia
+            //Sale del bucle, no hay horas para este dia, añadimos un dia
 
             cal.add(Calendar.DATE, 1);
             cal.set(Calendar.HOUR_OF_DAY, horasNotificaciones[0]);

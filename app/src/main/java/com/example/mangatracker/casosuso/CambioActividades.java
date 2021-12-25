@@ -19,6 +19,12 @@ public class CambioActividades {
         ctx.startActivity(new Intent(ctx, AddMangaActivity.class));
     }
 
+    /**
+     * Cambio a la ventana de actualizar manga
+     * @param ctx El contexto de la actividad
+     * @param nombreActivity La actividad de la que se proviene
+     * @param manga El manga sobre el que actualizar
+     */
     public static void CambioActualizarManga(Context ctx, String nombreActivity, Manga manga)
     {
         ctx.startActivity(new Intent(ctx, ActualizarMangaActivity.class)

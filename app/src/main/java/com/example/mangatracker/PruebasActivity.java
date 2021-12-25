@@ -1,14 +1,11 @@
 package com.example.mangatracker;
 
 import android.app.AlarmManager;
-import android.app.Application;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.PersistableBundle;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -17,10 +14,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
 
 import com.example.mangatracker.broadcast.NuevosLanzamientosBroadcastReceiver;
-import com.example.mangatracker.constantes.Constantes;
 import com.example.mangatracker.databinding.PruebasBinding;
 import com.example.mangatracker.notificaciones.Notificaciones;
-import com.example.mangatracker.servicios.BuscarNuevosLanzamientos;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;

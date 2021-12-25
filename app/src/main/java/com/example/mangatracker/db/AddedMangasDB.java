@@ -159,6 +159,38 @@ public class AddedMangasDB extends SQLiteOpenHelper {
         return listado.size() > 0 ? listado.toArray(new Manga[]{}) : new Manga[]{};
     }
 
+    /**
+     * Obtiene los mangas que tienen proxima fecha de lanzamiento
+     * @param actualizar False: Obtiene los datos. True: Obtiene los datos y actualiza las fechas
+     * @return El listado de mangas
+     */
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public static Manga[] ObtenerNuevosLanzamientos(boolean actualizar) {
+        List<Manga> listado = new ArrayList<>();
+        String sql = "SELECT * FROM MANGAS_ADDED WHERE SIGUIENTE_LANZAMIENTO IS NOT NULL ORDER BY FAVORITO DESC";
+        Cursor c = bd.getReadableDatabase().rawQuery(sql, null);
+
+        if (c.moveToFirst()) //Si hay al menos un dato
+        {
+            do {
+                int id = c.getInt(0);
+                String nombre = c.getString(1);
+                String fecha = c.getString(6);
+                listado.add(new Manga(id, nombre, fecha));
+            } while (c.moveToNext());
+        }
+        c.close();
+
+        if(actualizar)
+        {
+            ComprobarFechasManga(listado);
+        }
+
+        OrdenarMangas(listado);
+        return listado.size() > 0 ? listado.toArray(new Manga[]{}) : new Manga[]{};
+
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.N)
     private static void OrdenarMangas(List<Manga> listado) {
         listado.sort((m1, m2) -> {
@@ -179,30 +211,6 @@ public class AddedMangasDB extends SQLiteOpenHelper {
                 return 0;
             }
         });
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    public static Manga[] ObtenerNuevosLanzamientos(boolean actualizar) {
-        List<Manga> listado = new ArrayList<>();
-        String sql = "SELECT * FROM MANGAS_ADDED WHERE SIGUIENTE_LANZAMIENTO IS NOT NULL ORDER BY FAVORITO DESC";
-        Cursor c = bd.getReadableDatabase().rawQuery(sql, null);
-        if (c.moveToFirst()) //Si hay al menos un dato
-        {
-            do {
-                int id = c.getInt(0);
-                String nombre = c.getString(1);
-                String fecha = c.getString(6);
-                listado.add(new Manga(id, nombre, fecha));
-            } while (c.moveToNext());
-        }
-        c.close();
-        if(actualizar)
-        {
-            ComprobarFechasManga(listado);
-        }
-        OrdenarMangas(listado);
-        return listado.size() > 0 ? listado.toArray(new Manga[]{}) : new Manga[]{};
-
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)

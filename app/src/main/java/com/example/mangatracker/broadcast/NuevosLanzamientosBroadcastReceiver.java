@@ -12,6 +12,7 @@ import com.example.mangatracker.servicios.BuscarNuevosLanzamientos;
 public class NuevosLanzamientosBroadcastReceiver extends BroadcastReceiver {
     private String TAG = Constantes.TAG_APP + "NuevosLanzamientosBroadcastReceiver";
 
+    //Inicia el servicio para actualizar mangas y enviar notificaciones
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d(TAG, "onReceive");
