@@ -8,6 +8,9 @@
         android:title="@string/action_settings"
         app:showAsAction="never" />
     <item
+        android:id="@+id/MainMenuItemPruebas"
+        android:title="Pruebas" />
+    <item
         android:id="@+id/MainMenuItemNuevosLanzamientos"
         android:icon="@drawable/bell"
         android:title="Nuevos Lanzamientos"

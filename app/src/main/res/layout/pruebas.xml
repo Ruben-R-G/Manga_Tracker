@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".PruebasActivity">
+
+    <Button
+        android:id="@+id/PruebasBtnLanzarNotificacion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="128dp"
+        android:text="Lanzar Notificacion"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/PruebasBtnLanzarServicio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="128dp"
+        android:text="Lanzar Servicio en 2 Minutos"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/PruebasTxtVDesc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginLeft="24dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginRight="24dp"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:text="Para que tenga efecto el lanzamiento del servicio, despues de pulsar el boton hay que cerrar la aplicacion desde esta pantalla (volver al menu principal invalidará este lanzamiento)"
+        app:layout_constraintEnd_toEndOf="@+id/PruebasBtnLanzarServicio"
+        app:layout_constraintStart_toStartOf="@+id/PruebasBtnLanzarServicio"
+        app:layout_constraintTop_toBottomOf="@+id/PruebasBtnLanzarServicio" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -34,6 +34,9 @@
         <activity android:name=".PreferenciasActivity"
             android:label="Preferencias"
             />
+        <activity android:name=".PruebasActivity"
+            android:label="Pruebas"
+            />
 
         <service
             android:name = ".servicios.BuscarNuevosLanzamientos"

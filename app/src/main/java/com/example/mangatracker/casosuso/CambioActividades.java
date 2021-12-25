@@ -8,6 +8,7 @@ import com.example.mangatracker.ActualizarMangaActivity;
 import com.example.mangatracker.AddMangaActivity;
 import com.example.mangatracker.NuevosLanzamientosActivity;
 import com.example.mangatracker.PreferenciasActivity;
+import com.example.mangatracker.PruebasActivity;
 import com.example.mangatracker.ScrollingActivity;
 import com.example.mangatracker.clases.Manga;
 import com.example.mangatracker.pruebas.Pruebas;
@@ -38,5 +39,10 @@ public class CambioActividades {
     public static void CambioPreferencias(Context ctx)
     {
         ctx.startActivity(new Intent(ctx, PreferenciasActivity.class));
+    }
+
+    public static void CambioPruebas(Context ctx)
+    {
+        ctx.startActivity(new Intent(ctx, PruebasActivity.class));
     }
 }

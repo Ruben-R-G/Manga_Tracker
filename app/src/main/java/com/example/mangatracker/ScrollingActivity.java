@@ -120,6 +120,9 @@ public class ScrollingActivity extends AppCompatActivity {
             case R.id.MainMenuItemNuevosLanzamientos:
                 CambioActividades.CambioNuevosLanzamientos(this);
                 break;
+            case R.id.MainMenuItemPruebas:
+                CambioActividades.CambioPruebas(this);
+                break;
         }
         return true;
     }
