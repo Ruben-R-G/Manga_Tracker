@@ -20,6 +20,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 import static com.example.mangatracker.constantes.Constantes.CHANNEL_ID;
+import static com.example.mangatracker.constantes.Constantes.CHANNEL_ID_PRUEBA;
 
 public class Notificaciones {
     private String mensaje = "";
@@ -97,7 +98,7 @@ public class Notificaciones {
         {
             //Builder para la notificacion
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(ctx,
-                    CHANNEL_ID)
+                    CHANNEL_ID_PRUEBA)
                     //Detallamos el builder. Se puede hacer esto al generar la notificacion si
                     //se van a generar varias notificaciones distintas con el builder
                     .setSmallIcon(R.drawable.manga)

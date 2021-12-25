@@ -153,8 +153,6 @@ public class ScrollingActivity extends AppCompatActivity {
 
         Log.d(TAG, "Lanzando el servicio...");
 
-//        startService(new Intent(this, BuscarNuevosLanzamientos.class));
-
         Calendar proximaNotificacion = Constantes.ObtenerProximaNotificacion();
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         Log.d(TAG, "Proxima notificacion: "+ sdf.format(proximaNotificacion.getTime()));
