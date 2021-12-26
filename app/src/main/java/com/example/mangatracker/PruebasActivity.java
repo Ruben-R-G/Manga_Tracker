@@ -50,9 +50,6 @@ public class PruebasActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void IniciarServicio() { //Genera la alarma que iniciará el servicio
-        if(!PreferenceManager.getDefaultSharedPreferences(this)
-                .getBoolean("notificaciones", false)) return;
-
         Calendar proximaNotificacion = Calendar.getInstance();
         proximaNotificacion.add(Calendar.MINUTE, 2);
 
@@ -74,7 +71,6 @@ public class PruebasActivity extends AppCompatActivity {
 
         Toast.makeText(this, "Se lanzara la notificacion a las "
                 +sdf.format(proximaNotificacion.getTime()), Toast.LENGTH_LONG).show();
-
 
     }
 }

@@ -56,7 +56,10 @@ public class BuscarNuevosLanzamientos extends Service {
             notificaciones = new Notificaciones(this);
             AddedMangasDB.InstaciarBD(this);
             Log.d(TAG, "onCreate");
-            AddedMangasDB.ObtenerNuevosLanzamientos(true); //Se quedan a null las fechas que ya han pasado
+
+            //Se quedan a null las fechas que ya han pasado
+            AddedMangasDB.ObtenerNuevosLanzamientos(true);
+
             NuevosLanzamientos();
             notificaciones.LanzamientosPrueba();
         } catch (Exception e) {
@@ -69,10 +72,6 @@ public class BuscarNuevosLanzamientos extends Service {
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void CrearAlarma() {
-        if (!PreferenceManager.getDefaultSharedPreferences(this)
-                .getBoolean("notificaciones", false)) return;
-
-
         Calendar proximaNotificacion = Constantes.ObtenerProximaNotificacion();
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 
@@ -103,17 +102,6 @@ public class BuscarNuevosLanzamientos extends Service {
 
 
     public void NuevosLanzamientos() {
-        if (!PreferenceManager.getDefaultSharedPreferences(this)
-                .getBoolean("notificaciones", false)) return;
-
-        /*
-         * todo usar hilos para llamadas a listadomanga
-         *  Quitar las 3 lineas de strictmode si se usan hilos o async
-         */
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-                .permitAll().build();
-        StrictMode.setThreadPolicy(policy);
-
         //AddedMangasDB.InstaciarBD(this);
         Manga[] ms = AddedMangasDB.ActualizarNuevosLanzamientos();
 

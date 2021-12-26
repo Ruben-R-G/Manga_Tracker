@@ -6,10 +6,12 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.StrictMode;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.preference.PreferenceManager;
 
 import com.example.mangatracker.NuevosLanzamientosActivity;
 import com.example.mangatracker.R;
@@ -33,6 +35,17 @@ public class Notificaciones {
 
     public void createNotification (Boolean multiplesLanzamientos,
                                             String nombre, String fecha) {
+        if (!PreferenceManager.getDefaultSharedPreferences(ctx)
+                .getBoolean("notificaciones", false)) return;
+
+        /*
+         * todo usar hilos para llamadas a listadomanga
+         *  Quitar las 3 lineas de strictmode si se usan hilos o async
+         */
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
+                .permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+
         try
         {
             //Para hacer que al pulsar la notificacion, abra una actividad
@@ -94,6 +107,9 @@ public class Notificaciones {
 
     //region Pruebas de Notificaciones
     public void LanzamientosPrueba() {
+        if (!PreferenceManager.getDefaultSharedPreferences(ctx)
+                .getBoolean("notificaciones", false)) return;
+
         try
         {
             //Builder para la notificacion
