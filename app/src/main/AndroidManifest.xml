@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.mangatracker">
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <application
         android:name="androidx.multidex.MultiDexApplication"
         android:allowBackup="true"
@@ -52,7 +53,7 @@
             android:name=".broadcast.NuevosLanzamientosBroadcastReceiver">
             <intent-filter>
                 <action android:name="android.media.action.DISPLAY_NOTIFICATION" />
-
+                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>

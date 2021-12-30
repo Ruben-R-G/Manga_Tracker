@@ -134,10 +134,6 @@ public class ScrollingActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void IniciarServicio() { //Genera la alarma que iniciará el servicio
-
-        if(!PreferenceManager.getDefaultSharedPreferences(this)
-        .getBoolean("notificaciones", false)) return;
-
         Log.d(TAG, "Lanzando el servicio...");
 
         Calendar proximaNotificacion = Constantes.ObtenerProximaNotificacion();
