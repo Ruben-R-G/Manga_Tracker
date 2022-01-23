@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,9 +37,12 @@ public class ActualizarMangaActivity extends AppCompatActivity {
     private TextView txtTomosNoEditados;
     private EditText etTomosComprados;
 
+    private MenuItem item;
 
     private static MangaDatos md;
 
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onCreate(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,7 +52,6 @@ public class ActualizarMangaActivity extends AppCompatActivity {
         binding = ActualizarMangaBinding.inflate(getLayoutInflater());
         setContentView(R.layout.actualizar_manga);
 
-
         try {
             LlenarDatos();
         } catch (Exception e) {
@@ -56,37 +59,45 @@ public class ActualizarMangaActivity extends AppCompatActivity {
                     .setMessage("Error. No se han podido recuperar datos del manga\n\n"+e.getLocalizedMessage())
                     .setPositiveButton("Volver", (dialog, which) -> finish()).show();
         }
+
+
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     private void LlenarDatos() throws InterruptedException {
-        //todo no tengo por que coger los datos de la web si procedo de ScrollingActivity
-        Thread th = new Thread(() -> {
-            try {
-                md = MangaScrapper.ObtenerDatosDe(mangaActualizar.getId());
-            } catch (IOException e) {
-                e.printStackTrace();
+
+        if(actividadPadre.equals("AddMangaActivity")) {
+            Thread th = new Thread(() -> {
+                try {
+                    md = MangaScrapper.ObtenerDatosDe(mangaActualizar.getId());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+            th.start();
+            th.join();
+
+
+            if (md == null && actividadPadre.equals("AddMangaActivity")) {
+                new AlertDialog.Builder(this)
+                        .setMessage("Error. No se han podido recuperar datos del manga")
+                        .setPositiveButton("Volver", (dialog, which) -> finish()).show();
+                return;
             }
-        });
-        th.start();
-        th.join();
+            mangaActualizar.setTerminado(md.getTerminado());
+            mangaActualizar.setTomosNoEditados(md.getTomosNoEditados());
+            mangaActualizar.setTomosEnPreparacion(md.getTomosEnPreparacion());
+            mangaActualizar.setTomosEditados(md.getTomosEditados());
 
-        if(md == null)
+            if (md.getFecha() != null) {
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
+                mangaActualizar.setFecha(simpleDateFormat.format(md.getFecha()));
+            }
+        }else
         {
-            new AlertDialog.Builder(this)
-                    .setMessage("Error. No se han podido recuperar datos del manga")
-                    .setPositiveButton("Volver", (dialog, which) -> finish()).show();
-            return;
+            mangaActualizar = AddedMangasDB.ObtenerUno(mangaActualizar.getId());
         }
-        mangaActualizar.setTerminado(md.getTerminado());
-        mangaActualizar.setTomosNoEditados(md.getTomosNoEditados());
-        mangaActualizar.setTomosEnPreparacion(md.getTomosEnPreparacion());
-        mangaActualizar.setTomosEditados(md.getTomosEditados());
 
-        if(md.getFecha() != null)
-        {
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
-            mangaActualizar.setFecha(simpleDateFormat.format(md.getFecha()));
-        }
 
         txtNombre = findViewById(R.id.actualizar_manga_txtVNombre);
         txtNombre.append(mangaActualizar.getNombre());
@@ -109,11 +120,12 @@ public class ActualizarMangaActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_actualizar_manga, menu);
-        //todo hacer que el icono de borrar desaparezca si no proviene de ACtualizarManga
+        item = menu.findItem(R.id.menuactualizarmangaBorrar);
 
-        //if(!actividadPadre.equals("ScrollingActivity")){
-        //    borrar.setVisible(false);
-        //}
+        if(!actividadPadre.equals("ScrollingActivity")){
+            item.setVisible(false);
+        }
+
         return true;
     }
 

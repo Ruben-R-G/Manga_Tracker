@@ -1,6 +1,8 @@
 package com.example.mangatracker;
 
 import android.Manifest;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -8,8 +10,12 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
@@ -29,15 +35,20 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import clases.MangaBusqueda;
 import operaciones.BuscarManga;
 
+import static java.lang.Thread.sleep;
+
 public class AddMangaActivity extends AppCompatActivity {
     AddMangaBinding binding;
     EditText busqueda;
+    private ProgressBar progressBar;
     List<Manga> mangas = new ArrayList<>();
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,15 +56,20 @@ public class AddMangaActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         busqueda = findViewById(R.id.editTxtTitulo);
+        progressBar = findViewById(R.id.progressBarAddManga);
 
         Permisos.PedirPermisos(this, new String[]{Manifest.permission.INTERNET});
         CrearEventos();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onResume() {
         super.onResume();
-        //todo Actualizar la query de la busqueda
+
+        //todo meter en activity result
+        binding.btnBuscar.callOnClick();
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -70,44 +86,40 @@ public class AddMangaActivity extends AppCompatActivity {
                 return;
             }
 
-            /*
-            * todo usar hilos para llamadas a listadomanga
-            *  Quitar las 3 lineas de strictmode si se usan hilos o async
-            */
-            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-                    .permitAll().build();
-            StrictMode.setThreadPolicy(policy);
+            progressBar.setVisibility(View.VISIBLE);
 
-            try {
-                MangaBusqueda[] mangasEncontrados =
-                        BuscarManga.BuscarPorNombreManga(busqueda.getText().toString());
+            new Thread(() -> {
+                try {
+                    MangaBusqueda[] mangasEncontrados =
+                            BuscarManga.BuscarPorNombreManga(busqueda.getText().toString());
 
-                mangas = new ArrayList<>();
+                    mangas = new ArrayList<>();
 
 
-                mangasEncontrados = Arrays.stream(mangasEncontrados).filter(m ->
-                        !Arrays.stream(AddedMangasDB.ObtenerTodos())
-                                .anyMatch(m2 -> m.getId() == m2.getId())
-                ).toArray(MangaBusqueda[]::new);
+                    for(MangaBusqueda mBuscado : mangasEncontrados)
+                    {
+                        Manga m = new Manga(mBuscado.getId(), mBuscado.getNombre());
 
+                        mangas.add(m);
+                    }
 
-                for(MangaBusqueda mBuscado : mangasEncontrados)
-                {
-                    Manga m = new Manga(mBuscado.getId(), mBuscado.getNombre());
+                    QuitarMangasAdded();
 
-                    mangas.add(m);
+                    runOnUiThread(() -> {
+                        ((AdaptadorRecycler)binding.addMangaRecycler.getAdapter())
+                                .ActualizarMangas(AdaptadorRecycler.TIPOADAPTER.AddManga,
+                                        mangas.toArray(new Manga[]{}));
+
+                        binding.addMangaRecycler.getAdapter().notifyDataSetChanged();
+
+                        progressBar.setVisibility(View.GONE);
+                    });
+
+                } catch (IOException e) {
+                    Toast.makeText(v.getContext(), "Ha ocurrido un error al buscar", Toast.LENGTH_LONG).show();
+                    e.printStackTrace();
                 }
-
-                ((AdaptadorRecycler)binding.addMangaRecycler.getAdapter())
-                        .ActualizarMangas(AdaptadorRecycler.TIPOADAPTER.AddManga,
-                                mangas.toArray(new Manga[]{}));
-
-                binding.addMangaRecycler.getAdapter().notifyDataSetChanged();
-
-            } catch (IOException e) {
-                Toast.makeText(v.getContext(), "Ha ocurrido un error al buscar", Toast.LENGTH_LONG).show();
-                e.printStackTrace();
-            }
+            }).start();
         });
 
         //Para pruebas
@@ -115,6 +127,14 @@ public class AddMangaActivity extends AppCompatActivity {
 
         OperacionesRV();
 
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void QuitarMangasAdded() {
+        mangas = mangas.stream().filter(m ->
+                !Arrays.stream(AddedMangasDB.ObtenerTodos())
+                        .anyMatch(m2 -> m.getId() == m2.getId())
+        ).collect(Collectors.toList());
     }
 
     private void OperacionesRV() {

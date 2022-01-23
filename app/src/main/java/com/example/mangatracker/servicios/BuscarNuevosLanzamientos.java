@@ -255,7 +255,7 @@ public class BuscarNuevosLanzamientos extends Service {
                     int TotalNuevosLanzamientos = 0;
 
                     for (Manga m : ms) {
-                        long tiempoEspera = (long) Math.floor((Math.random() + 1) * 2000);
+                        long tiempoEspera = (long) Math.floor((Math.random() + 1) * 3000);
                         Log.d(TAG, "Esperando " + tiempoEspera + " para el siguiente");
 
                         sleep(tiempoEspera);

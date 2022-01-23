@@ -39,14 +39,6 @@ public class Notificaciones {
         if (!PreferenceManager.getDefaultSharedPreferences(ctx)
                 .getBoolean("notificaciones", false)) return;
 
-        /*
-         * todo usar hilos para llamadas a listadomanga
-         *  Quitar las 3 lineas de strictmode si se usan hilos o async
-         */
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-                .permitAll().build();
-        StrictMode.setThreadPolicy(policy);
-
         try
         {
             Log.d(TAG, "Lanzando notificacion. Canal: "+channel);

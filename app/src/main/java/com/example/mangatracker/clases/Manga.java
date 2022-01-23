@@ -144,7 +144,6 @@ public class Manga implements Serializable {
         return tomosComprados;
     }
 
-    //todo controlar cuando los tomos comprados sean menor que 0
     public void setTomosComprados(int tomosComprados) throws NumeroMangasException {
         if(tomosComprados > tomosEditados)
         {
