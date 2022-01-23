@@ -1,6 +1,7 @@
 package com.example.mangatracker;
 
 import android.Manifest;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.view.GestureDetector;
@@ -10,6 +11,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -19,11 +21,13 @@ import com.example.mangatracker.adapters.AdaptadorRecycler;
 import com.example.mangatracker.casosuso.CambioActividades;
 import com.example.mangatracker.clases.Manga;
 import com.example.mangatracker.databinding.AddMangaBinding;
+import com.example.mangatracker.db.AddedMangasDB;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import clases.MangaBusqueda;
@@ -52,6 +56,7 @@ public class AddMangaActivity extends AppCompatActivity {
         //todo Actualizar la query de la busqueda
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     private void CrearEventos() {
         binding.btnBuscar.setOnClickListener((v) -> {
             if(busqueda.getText().length() < 3)
@@ -78,6 +83,13 @@ public class AddMangaActivity extends AppCompatActivity {
                         BuscarManga.BuscarPorNombreManga(busqueda.getText().toString());
 
                 mangas = new ArrayList<>();
+
+
+                mangasEncontrados = Arrays.stream(mangasEncontrados).filter(m ->
+                        !Arrays.stream(AddedMangasDB.ObtenerTodos())
+                                .anyMatch(m2 -> m.getId() == m2.getId())
+                ).toArray(MangaBusqueda[]::new);
+
 
                 for(MangaBusqueda mBuscado : mangasEncontrados)
                 {
