@@ -129,6 +129,29 @@ public class AddedMangasDB extends SQLiteOpenHelper {
         bd.getWritableDatabase().execSQL(sql);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public static Manga ObtenerUno(int id) {
+        String sql = "SELECT * FROM MANGAS_ADDED WHERE ID = " + id;
+        Cursor c = bd.getReadableDatabase().rawQuery(sql, null);
+
+        if (c.moveToFirst()) //Si hay al menos un dato
+        {
+                String nombre = c.getString(1);
+                int edit = c.getInt(2);
+                int prep = c.getInt(3);
+                int noedit = c.getInt(4);
+                int comp = c.getInt(5);
+                String fecha = c.getString(6);
+                int terminado = c.getInt(7);
+                int fav = c.getInt(8);
+                int drop = c.getInt(9);
+
+                c.close();
+                return new Manga(id, nombre, edit, prep, noedit, comp, fecha, terminado, fav, drop);
+        }
+        c.close();
+        return null;
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public static Manga[] ObtenerTodos() {

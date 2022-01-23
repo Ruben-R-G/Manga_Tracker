@@ -20,6 +20,7 @@ import com.example.mangatracker.constantes.Constantes;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.example.mangatracker.constantes.Constantes.CHANNEL_ID;
 import static com.example.mangatracker.constantes.Constantes.CHANNEL_ID_PRUEBA;
@@ -28,13 +29,13 @@ public class Notificaciones {
     private String mensaje = "";
     private final String TAG = Constantes.TAG_APP + "NOTIF";
     private Context ctx;
-
+    private final static AtomicInteger idNotificacion = new AtomicInteger(0);
     public Notificaciones(Context ctx) {
         this.ctx = ctx;
     }
 
-    public void createNotification (Boolean multiplesLanzamientos,
-                                            String nombre, String fecha) {
+
+    public void createNotification (String titulo, String texto, String channel) {
         if (!PreferenceManager.getDefaultSharedPreferences(ctx)
                 .getBoolean("notificaciones", false)) return;
 
@@ -48,6 +49,8 @@ public class Notificaciones {
 
         try
         {
+            Log.d(TAG, "Lanzando notificacion. Canal: "+channel);
+
             //Para hacer que al pulsar la notificacion, abra una actividad
             Intent intent = new Intent(ctx, NuevosLanzamientosActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -60,20 +63,23 @@ public class Notificaciones {
                     //Detallamos el builder. Se puede hacer esto al generar la notificacion si
                     //se van a generar varias notificaciones distintas con el builder
                     .setSmallIcon(R.drawable.manga)
-                    .setContentTitle(multiplesLanzamientos ? "¡Nuevos lanzamientos!" : "Nuevo lanzamiento: "+nombre)
-                    .setContentText(multiplesLanzamientos ? "Comprueba los nuevos lanzamientos" :
-                            "Nuevo lanzamiento de "+nombre+" el día "+fecha)
+                    .setContentTitle(titulo)
+                    .setContentText(texto)
                     .setStyle(new NotificationCompat.BigTextStyle()
-                            .bigText(multiplesLanzamientos ? "Comprueba los nuevos lanzamientos" :
-                                    "Nuevo lanzamiento de "+nombre+" el día "+fecha))
-                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                            .bigText(texto))
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
                     //La intent que lleva la notificacion
                     .setContentIntent(pendingIntent)
                     .setAutoCancel(true); //Elimina la notificacion al hacer tap
 
-            CrearCanalNotificacion();
+            CrearCanalNotificacion(channel);
 
-            int id_notificacion = (int) ((new Date().getTime() / 1000L) % Integer.MAX_VALUE);
+            //int id_notificacion = (int) ((Calendar.getInstance().getTimeInMillis() / 1000L) % Integer.MAX_VALUE);
+            //Log.d(TAG, "ID de notificacion: "+id_notificacion);
+
+            int id_notificacion = idNotificacion.incrementAndGet();
+            Log.d(TAG, "ID de notificacion: "+id_notificacion);
+
             //Lanzar la notificacion
             NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(ctx);
             notificationManagerCompat.notify(id_notificacion,
@@ -86,14 +92,14 @@ public class Notificaciones {
         }
     }
 
-    private void CrearCanalNotificacion() {
+    private void CrearCanalNotificacion(String channel) {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) //Solo para versiones mayores que 26
         {
-            String nombre = "Canal notificacion";
-            String descripcion = "Notificacion para los nuevos lanzamientos";
-            int importancia = NotificationManager.IMPORTANCE_DEFAULT;
+            String nombre = "Canal " + channel;
+            String descripcion = "Notificacion para los nuevos lanzamientos. "+channel;
+            int importancia = NotificationManager.IMPORTANCE_HIGH;
 
-            NotificationChannel canal = new NotificationChannel(Constantes.CHANNEL_ID, nombre, importancia);
+            NotificationChannel canal = new NotificationChannel(channel, nombre, importancia);
             canal.setDescription(descripcion);
 
             //Registrar el canal en el sistema

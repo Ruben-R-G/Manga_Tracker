@@ -1,14 +1,19 @@
 package com.example.mangatracker.constantes;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 public class Constantes {
     public static final boolean debug = false; //true para que en lugar de ir por horas, vaya por minutos
     public static final String TAG_APP = "MangaTracker - ";
     public static final String CHANNEL_ID = "NuevosLanzamientosChannel";
-    public static final int[] horasNotificaciones = {9, 13, 19, 21};
+    public static final String CHANNEL_ID_RETRASOS = "LanzamientosRetrasadosChannel";
+    public static final int[] horasNotificaciones = {9, 13, 19};
     public static final int[] minutosPruebaNotificaciones = {4, 6, 8};
     public static final String CHANNEL_ID_PRUEBA = "PruebaNuevosLanzamientosChannel";
+    public static final SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+    public static final SimpleDateFormat sdfSinHoras = new SimpleDateFormat("dd-MM-yyyy");
+
 
     public static Calendar ObtenerProximaNotificacion() {
         Calendar cal = Calendar.getInstance();

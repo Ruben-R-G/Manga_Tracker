@@ -28,20 +28,35 @@ import com.example.mangatracker.notificaciones.Notificaciones;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 
 import clases.MangaDatos;
 import operaciones.MangaScrapper;
 
 import static com.example.mangatracker.constantes.Constantes.CHANNEL_ID;
+import static com.example.mangatracker.constantes.Constantes.sdf;
+import static com.example.mangatracker.constantes.Constantes.sdfSinHoras;
+import static java.lang.Thread.sleep;
 
 public class BuscarNuevosLanzamientos extends Service {
     private String mensaje = "";
     private final String TAG = Constantes.TAG_APP + "BNL";
     private Notificaciones notificaciones;
+
+    //Comprobacion de que los mangas a los que le falte poco tiempo no se hayan retrasado
+    private Manga[] mangasProximos;
+
+    //Comprobacion de los nuevos lanzamientos (se actualizan también otros datos)
+    private String[] mangasNotif = new String[2];
 
     @Override
     public IBinder onBind(Intent arg0) {
@@ -52,28 +67,144 @@ public class BuscarNuevosLanzamientos extends Service {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onCreate() {
-        try {
-            notificaciones = new Notificaciones(this);
-            AddedMangasDB.InstaciarBD(this);
-            Log.d(TAG, "onCreate");
+        new Thread(() -> {
+            try {
+                notificaciones = new Notificaciones(this);
+                AddedMangasDB.InstaciarBD(this);
+                Log.d(TAG, "onCreate");
 
-            //Se quedan a null las fechas que ya han pasado
-            AddedMangasDB.ObtenerNuevosLanzamientos(true);
+                //Se quedan a null las fechas que ya han pasado
+                AddedMangasDB.ObtenerNuevosLanzamientos(true);
 
-            NuevosLanzamientos();
-            notificaciones.LanzamientosPrueba();
-        } catch (Exception e) {
-            Log.e(TAG, "EXCEPCION NO CONTROLADA: \n" + e.getMessage());
-            mensaje += e.getMessage() + "\n";
+                //Dejamos a null las fechas próximas para comprobar si han habido retrasos
+                ComprobarLanzamientosProximos();
+
+                FutureTask<Integer> lanzamientos = new FutureTask<>(NuevosLanzamientos());
+                ExecutorService exec = Executors.newCachedThreadPool();
+                exec.submit(lanzamientos);
+
+                Log.d(TAG, "Esperando al FutureTask");
+
+                while(!lanzamientos.isDone())
+                {
+                }
+                Integer result = lanzamientos.get();
+                exec.shutdown();
+
+                notificacionResultadosNuevosLanzamientos(result);
+
+                //Para los lanzamientos próximos
+                notificacionProximosLanzamientos();
+
+                notificaciones.LanzamientosPrueba();
+            } catch (Exception e) {
+                Log.e(TAG, "EXCEPCION NO CONTROLADA: \n" + e.getMessage());
+                mensaje += e.getMessage() + "\n";
+            }
+            CrearAlarma();
+            this.stopSelf(); //Llama al onDestroy
+        }).start();
+
+    }
+
+    private void notificacionProximosLanzamientos() {
+        mangasProximos = Arrays.stream(mangasProximos).filter(man -> {
+            Manga mangaBD = AddedMangasDB.ObtenerUno(man.getId());
+            if(mangaBD == null){
+                Log.e(TAG, "Manga nulo. ID: "+ man.getId());
+                return false;
+            }
+
+            Calendar mangaAntesDeActualizar = Calendar.getInstance();
+            Calendar mangaDespuesDeActualizar = Calendar.getInstance();
+
+            try {
+                mangaAntesDeActualizar.setTime(sdfSinHoras.parse(man.getFecha()));
+                mangaDespuesDeActualizar.setTime(sdfSinHoras.parse(mangaBD.getFecha()));
+
+                return mangaAntesDeActualizar.compareTo(mangaDespuesDeActualizar) != 0;
+            } catch (ParseException e) {
+                Log.e(TAG, e.getMessage());
+                e.printStackTrace();
+                return false;
+            }
+        }).toArray(Manga[]::new);
+
+        Log.d(TAG, "Mangas retrasados = "+mangasProximos.length);
+
+        if(mangasProximos.length == 0)
+            return;
+
+        String texto = "Se retrasa "+
+                (Arrays.stream(mangasProximos).map(Manga::getNombre)
+                        .reduce("",
+                                (ant, prox) -> String.format("%s%s, ", ant, prox)));
+
+        notificaciones.createNotification(
+                mangasProximos.length + " retrasos en mangas próximos al lanzamiento",
+                texto.substring(0, texto.length()-2), //-2 para quitar la , y espacio,
+                Constantes.CHANNEL_ID_RETRASOS
+        );
+    }
+
+    private void notificacionResultadosNuevosLanzamientos(Integer result) {
+        Log.d(TAG, "Resultado: "+result);
+        switch (result)
+        {
+            case -1:
+                Log.e(TAG, "Error al obtener datos del FutureTask");
+                mensaje += "Error al obtener datos del FutureTask";
+                break;
+            case 0:
+                Log.d(TAG, "No hay mangas añadidos");
+                break;
+            case 1:
+            case 2:
+                notificaciones.createNotification((result == 2 ?
+                                "¡Nuevos lanzamientos!" : "Nuevo lanzamiento: "+mangasNotif[0])
+                        , (result == 2 ? "Comprueba los nuevos lanzamientos" :
+                                "Nuevo lanzamiento de "+mangasNotif[0]+" el día "+mangasNotif[1])
+                        , CHANNEL_ID
+                );
         }
-        CrearAlarma();
-        this.stopSelf(); //Llama al onDestroy
+    }
+
+    private void ComprobarLanzamientosProximos() {
+        mangasProximos = Arrays.stream(AddedMangasDB.ObtenerNuevosLanzamientos(false))
+                .filter(m -> {
+            Date fechaManga;
+            try {
+                fechaManga = sdfSinHoras.parse(m.getFecha());
+
+                Calendar fecha = Calendar.getInstance();
+                fecha.setTime(fechaManga);
+
+                Long diferencia = ChronoUnit.DAYS.between(fecha.toInstant(),
+                        Calendar.getInstance().toInstant());
+                Log.d("TAG", "Diferencia de días de "+ m.getNombre() + ": \n" + diferencia);
+
+                return diferencia == -5
+                        && Constantes.ObtenerProximaNotificacion().get(Calendar.HOUR_OF_DAY)
+                        == Constantes.horasNotificaciones[Constantes.horasNotificaciones.length-1];
+
+            } catch (ParseException e) {
+                Log.e(TAG, e.getMessage());
+                e.printStackTrace();
+                return false;
+            }
+        }).toArray(Manga[]::new);
+
+        for(Manga m : mangasProximos)
+        {
+            AddedMangasDB.ActualizarFecha(m.getId(), null);
+        }
+
+        Log.d(TAG, "Número de mangas a falta de 5 dias: "+mangasProximos.length);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void CrearAlarma() {
         Calendar proximaNotificacion = Constantes.ObtenerProximaNotificacion();
-        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 
         Log.d(TAG, "Proxima notificacion: " + sdf.format(proximaNotificacion.getTime()));
 
@@ -100,77 +231,101 @@ public class BuscarNuevosLanzamientos extends Service {
         Log.d(TAG, "onDestroy");
     }
 
+    /**
+     * Llamada al servicio para recuperar datos de listado manga
+     * @return 0 si no hay mangas sin fecha en la app,
+     * 1 si está correcto y es solo un lanzamiento nuevo, 2 si correcto y varios lanzamientos,
+     * -1 si hay algún error
+     */
+    public Callable<Integer> NuevosLanzamientos() {
+        return new Callable<Integer>() {
+            @Override
+            public Integer call() {
+                try {
+                    //AddedMangasDB.InstaciarBD(this);
+                    Manga[] ms = AddedMangasDB.ActualizarNuevosLanzamientos();
 
-    public void NuevosLanzamientos() {
-        //AddedMangasDB.InstaciarBD(this);
-        Manga[] ms = AddedMangasDB.ActualizarNuevosLanzamientos();
+                    if (ms.length == 0) return 0; //No hay mangas sin fecha, no actualizo nada
 
-        if (ms.length == 0) return; //No hay mangas sin fecha, no actualizo nada
+                    Log.d(TAG, "Hay " + ms.length + " mangas sin proxima fecha y sin finalizar");
 
-        Log.d(TAG, "Hay " + ms.length + " mangas sin proxima fecha y sin finalizar");
 
-        //Comprobacion de los nuevos lanzamientos (se actualizan también otros datos)
-        String[] mangasNotif = new String[2];
 
-        Boolean MultiplesLanzamientos = false;
-        int TotalNuevosLanzamientos = 0;
+                    Boolean MultiplesLanzamientos = false;
+                    int TotalNuevosLanzamientos = 0;
 
-        for (Manga m : ms) {
-            Manga NuevoLanz = new Manga(-1, "Nada nuevo");
+                    for (Manga m : ms) {
+                        long tiempoEspera = (long) Math.floor((Math.random() + 1) * 2000);
+                        Log.d(TAG, "Esperando " + tiempoEspera + " para el siguiente");
 
-            NuevoLanz.setId(m.getId());
-            try {
-                Log.e(TAG, "Buscando datos del id: "+m.getId());
+                        sleep(tiempoEspera);
 
-                MangaDatos nuevosDatos = MangaScrapper.ObtenerDatosDe(m.getId());
+                        Manga NuevoLanz = new Manga(-1, "Nada nuevo");
 
-                NuevoLanz.setNombre(m.getNombre());
+                        NuevoLanz.setId(m.getId());
+                        try {
+                            Log.e(TAG, "Buscando datos del id: " + m.getId());
 
-                //Obtengo los datos actualizados y tambien los inserto
-                NuevoLanz.setTomosEditados(nuevosDatos.getTomosEditados());
-                NuevoLanz.setTomosEnPreparacion(nuevosDatos.getTomosEnPreparacion());
-                NuevoLanz.setTomosNoEditados(nuevosDatos.getTomosNoEditados());
-                NuevoLanz.setTerminado(nuevosDatos.getTerminado());
+                            MangaDatos nuevosDatos = MangaScrapper.ObtenerDatosDe(m.getId());
 
-                //Mantengo los tomos comprados (al hacer la insercion en sql,
-                // tambien se actualizan los tomos comprados)
-                NuevoLanz.setTomosComprados(m.getTomosComprados());
+                            NuevoLanz.setNombre(m.getNombre());
 
-                AddedMangasDB.ActualizarManga(NuevoLanz);
+                            //Obtengo los datos actualizados y tambien los inserto
+                            NuevoLanz.setTomosEditados(nuevosDatos.getTomosEditados());
+                            NuevoLanz.setTomosEnPreparacion(nuevosDatos.getTomosEnPreparacion());
+                            NuevoLanz.setTomosNoEditados(nuevosDatos.getTomosNoEditados());
+                            NuevoLanz.setTerminado(nuevosDatos.getTerminado());
 
-                //Si no se obtiene fecha, no cuenta como nuevo lanzamiento
-                if (nuevosDatos.getFecha() == null) continue;
+                            //Mantengo los tomos comprados (al hacer la insercion en sql,
+                            // tambien se actualizan los tomos comprados)
+                            NuevoLanz.setTomosComprados(m.getTomosComprados());
 
-                NuevoLanz.setFecha(new SimpleDateFormat("dd-MM-yyyy")
-                        .format(nuevosDatos.getFecha()));
-                AddedMangasDB.ActualizarFecha(NuevoLanz.getId(), NuevoLanz.getFecha());
+                            AddedMangasDB.ActualizarManga(NuevoLanz);
 
-                TotalNuevosLanzamientos++;
+                            //Si no se obtiene fecha, no cuenta como nuevo lanzamiento
+                            if (nuevosDatos.getFecha() == null) continue;
 
-                if (TotalNuevosLanzamientos > 1) {
-                    MultiplesLanzamientos = true;
-                    continue;
+                            NuevoLanz.setFecha(new SimpleDateFormat("dd-MM-yyyy")
+                                    .format(nuevosDatos.getFecha()));
+                            AddedMangasDB.ActualizarFecha(NuevoLanz.getId(), NuevoLanz.getFecha());
+
+                            if(Arrays.stream(mangasProximos).anyMatch(man -> man.getId()
+                                    == NuevoLanz.getId()))
+                                continue;
+
+                            TotalNuevosLanzamientos++;
+
+                            if (TotalNuevosLanzamientos > 1) {
+                                MultiplesLanzamientos = true;
+                                continue;
+                            }
+
+                            //Datos del manga que se mostrará en la notificación si es el único
+                            mangasNotif[0] = NuevoLanz.getNombre();
+                            mangasNotif[1] = NuevoLanz.getFecha();
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            mensaje += e.getMessage() + "\n";
+                        } catch (NoSuchMethodError e) {
+                            Log.e(TAG, "Joder");
+                            e.printStackTrace();
+                            mensaje += e.getMessage() + "\n";
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            mensaje += e.getMessage() + "\n";
+                        }
+                    }
+
+                    return TotalNuevosLanzamientos > 1 ? 1 : TotalNuevosLanzamientos;
+
+                }catch (Exception e)
+                {
+                    e.printStackTrace();
+                    return -1;
                 }
-
-                //Datos del manga que se mostrará en la notificación si es el único
-                mangasNotif[0] = NuevoLanz.getNombre();
-                mangasNotif[1] = NuevoLanz.getFecha();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                mensaje += e.getMessage() + "\n";
-            } catch (NoSuchMethodError e) {
-                Log.e(TAG, "Joder");
-                e.printStackTrace();
-                mensaje += e.getMessage() + "\n";
-            } catch (Exception e) {
-                e.printStackTrace();
-                mensaje += e.getMessage() + "\n";
             }
-        }
-        if (TotalNuevosLanzamientos != 0)
-            notificaciones.createNotification(MultiplesLanzamientos, mangasNotif[0], mangasNotif[1]);
-
+        };
     }
 
 }
