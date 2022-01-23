@@ -120,6 +120,8 @@ public class BuscarNuevosLanzamientos extends Service {
 
             NuevoLanz.setId(m.getId());
             try {
+                Log.e(TAG, "Buscando datos del id: "+m.getId());
+
                 MangaDatos nuevosDatos = MangaScrapper.ObtenerDatosDe(m.getId());
 
                 NuevoLanz.setNombre(m.getNombre());

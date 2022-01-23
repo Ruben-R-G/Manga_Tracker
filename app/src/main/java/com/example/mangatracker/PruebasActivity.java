@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -14,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
 
 import com.example.mangatracker.broadcast.NuevosLanzamientosBroadcastReceiver;
+import com.example.mangatracker.constantes.Constantes;
 import com.example.mangatracker.databinding.PruebasBinding;
 import com.example.mangatracker.notificaciones.Notificaciones;
 
@@ -21,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 public class PruebasActivity extends AppCompatActivity {
+    private final String TAG = Constantes.TAG_APP + "Pruebas";
     PruebasBinding binding;
     Notificaciones notificaciones;
 
@@ -43,15 +46,20 @@ public class PruebasActivity extends AppCompatActivity {
                 notificaciones.LanzamientosPrueba());
 
         binding.PruebasBtnLanzarServicio.setOnClickListener(l ->
-                IniciarServicio());
+                IniciarServicio(false));
+
+        binding.pruebasBtnLanzarServicioInmediato.setOnClickListener(l ->
+                IniciarServicio(true));
     }
 
 
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    private void IniciarServicio() { //Genera la alarma que iniciará el servicio
+    private void IniciarServicio(boolean LanzarInmediato) { //Genera la alarma que iniciará el servicio
         Calendar proximaNotificacion = Calendar.getInstance();
-        proximaNotificacion.add(Calendar.MINUTE, 2);
+
+        if(!LanzarInmediato)
+            proximaNotificacion.add(Calendar.MINUTE, 2);
 
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 
@@ -71,6 +79,6 @@ public class PruebasActivity extends AppCompatActivity {
 
         Toast.makeText(this, "Se lanzara la notificacion a las "
                 +sdf.format(proximaNotificacion.getTime()), Toast.LENGTH_LONG).show();
-
+        Log.e(TAG, "Lanzando servicio a las "+ sdf.format(proximaNotificacion.getTime()));
     }
 }

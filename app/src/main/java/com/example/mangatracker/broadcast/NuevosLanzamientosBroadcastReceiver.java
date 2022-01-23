@@ -24,13 +24,13 @@ public class NuevosLanzamientosBroadcastReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Log.d(TAG, "onReceive");
 
-        if (intent.getAction().equals("android.intent.action.BOOT_COMPLETED")) {
-
-            Calendar cal = Constantes.ObtenerProximaNotificacion();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                IniciarServicio(context);
+        if(intent.getAction() != null) {
+            if (intent.getAction().equals("android.intent.action.BOOT_COMPLETED")) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    IniciarServicio(context);
+                }
+                return;
             }
-            return;
         }
         context.startService(new Intent(context, BuscarNuevosLanzamientos.class));
     }

@@ -6,7 +6,7 @@ public class Constantes {
     public static final boolean debug = false; //true para que en lugar de ir por horas, vaya por minutos
     public static final String TAG_APP = "MangaTracker - ";
     public static final String CHANNEL_ID = "NuevosLanzamientosChannel";
-    public static final int[] horasNotificaciones = {9, 13, 19};
+    public static final int[] horasNotificaciones = {9, 13, 19, 21};
     public static final int[] minutosPruebaNotificaciones = {4, 6, 8};
     public static final String CHANNEL_ID_PRUEBA = "PruebaNuevosLanzamientosChannel";
 
