@@ -29,9 +29,11 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Callable;
@@ -55,6 +57,12 @@ public class BuscarNuevosLanzamientos extends Service {
     //Comprobacion de que los mangas a los que le falte poco tiempo no se hayan retrasado
     private Manga[] mangasProximos;
 
+    //Comprobar cada semana que los mangas con fecha no se hayan adelantado
+    private Manga[] mangasComprobacion;
+
+    //Comprobar los mangas que se lancen ese día para notificarlo
+    private Manga[] mangasLanzadosHoy;
+
     //Comprobacion de los nuevos lanzamientos (se actualizan también otros datos)
     private String[] mangasNotif = new String[2];
 
@@ -73,11 +81,13 @@ public class BuscarNuevosLanzamientos extends Service {
                 AddedMangasDB.InstaciarBD(this);
                 Log.d(TAG, "onCreate");
 
+                //Obtenemos los lanzamientos que se lanzan ese día para mostrar la notificacion
+                ComprobarMangasLanzadosHoy();
+
                 //Se quedan a null las fechas que ya han pasado
                 AddedMangasDB.ObtenerNuevosLanzamientos(true);
 
-                //Dejamos a null las fechas próximas para comprobar si han habido retrasos
-                ComprobarLanzamientosProximos();
+                ComprobarMangasConFecha();
 
                 FutureTask<Integer> lanzamientos = new FutureTask<>(NuevosLanzamientos());
                 ExecutorService exec = Executors.newCachedThreadPool();
@@ -94,7 +104,14 @@ public class BuscarNuevosLanzamientos extends Service {
                 notificacionResultadosNuevosLanzamientos(result);
 
                 //Para los lanzamientos próximos
-                notificacionProximosLanzamientos();
+                //notificacionProximosLanzamientos();
+
+                //Para los lanzamientos adelantados
+                notificacionLanzamientosAdelantados();
+                notificacionLanzamientosAtrasados();
+
+                //Para los lanzamiento que se lanzan ese dia
+                notificacionLanzamientosHoy();
 
                 notificaciones.LanzamientosPrueba();
             } catch (Exception e) {
@@ -104,11 +121,69 @@ public class BuscarNuevosLanzamientos extends Service {
             CrearAlarma();
             this.stopSelf(); //Llama al onDestroy
         }).start();
-
     }
 
-    private void notificacionProximosLanzamientos() {
-        mangasProximos = Arrays.stream(mangasProximos).filter(man -> {
+
+
+    //region Comprobaciones
+    private void ComprobarMangasLanzadosHoy() {
+        mangasLanzadosHoy = Arrays.stream(AddedMangasDB.ObtenerNuevosLanzamientos(false))
+                .filter(m -> {
+                    Date FechaManga;
+                    try {
+                            FechaManga = sdfSinHoras.parse(m.getFecha());
+                            Calendar hoy = Calendar.getInstance();
+                            //hoy.add(Calendar.DAY_OF_YEAR, -1);
+
+                            return FechaManga.before(hoy.getTime());
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                        return false;
+                    }
+                }).toArray(Manga[]::new);
+    }
+
+    private void ComprobarMangasConFecha() {
+
+        if(Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
+                == Calendar.SUNDAY
+                &&
+                Constantes.ObtenerProximaNotificacion()
+                        .get(Calendar.HOUR_OF_DAY)
+                        == Constantes.horasNotificaciones[0]
+        ) //Mangas adelantados
+        {
+            Log.d(TAG, "Comprobamos todos los mangas");
+            mangasComprobacion = AddedMangasDB.ObtenerNuevosLanzamientos(false);
+            for (Manga m : mangasComprobacion) {
+                AddedMangasDB.ActualizarFecha(m.getId(), null);
+            }
+        }
+    }
+
+    //endregion
+
+    //region Notificaciones
+
+    private void notificacionLanzamientosHoy() {
+        if(mangasLanzadosHoy.length == 0) return;
+
+        String texto = "Hoy se lanza: \n"+
+                (Arrays.stream(mangasLanzadosHoy).map(Manga::getNombre)
+                        .reduce("",
+                                (ant, prox) -> String.format("%s%s, ", ant, prox)));
+
+        notificaciones.createNotification(
+                (mangasLanzadosHoy.length +
+                        (mangasLanzadosHoy.length == 1 ? " manga sale" : " mangas salen")+ " hoy!"),
+                texto.substring(0, texto.length()-2), //-2 para quitar la , y espacio
+                Constantes.CHANNEL_ID_HOY
+                );
+    }
+
+    private void notificacionLanzamientosAdelantados() {
+        Manga[] mangasAdelantados;
+        mangasAdelantados = Arrays.stream(mangasComprobacion).filter(man -> {
             Manga mangaBD = AddedMangasDB.ObtenerUno(man.getId());
             if(mangaBD == null){
                 Log.e(TAG, "Manga nulo. ID: "+ man.getId());
@@ -122,7 +197,7 @@ public class BuscarNuevosLanzamientos extends Service {
                 mangaAntesDeActualizar.setTime(sdfSinHoras.parse(man.getFecha()));
                 mangaDespuesDeActualizar.setTime(sdfSinHoras.parse(mangaBD.getFecha()));
 
-                return mangaAntesDeActualizar.compareTo(mangaDespuesDeActualizar) != 0;
+                return mangaAntesDeActualizar.compareTo(mangaDespuesDeActualizar) < 0;
             } catch (ParseException e) {
                 Log.e(TAG, e.getMessage());
                 e.printStackTrace();
@@ -130,18 +205,61 @@ public class BuscarNuevosLanzamientos extends Service {
             }
         }).toArray(Manga[]::new);
 
-        Log.d(TAG, "Mangas retrasados = "+mangasProximos.length);
+        Log.d(TAG, "Mangas adelantados = "+mangasAdelantados.length);
 
-        if(mangasProximos.length == 0)
+        if(mangasAdelantados.length == 0)
             return;
 
-        String texto = "Se retrasa "+
-                (Arrays.stream(mangasProximos).map(Manga::getNombre)
+        String texto = "Se adelanta "+
+                (Arrays.stream(mangasAdelantados).map(Manga::getNombre)
                         .reduce("",
                                 (ant, prox) -> String.format("%s%s, ", ant, prox)));
 
         notificaciones.createNotification(
-                mangasProximos.length + " retrasos en mangas próximos al lanzamiento",
+                mangasAdelantados.length
+                        + " adelantos en mangas próximos al lanzamiento",
+                texto.substring(0, texto.length()-2), //-2 para quitar la , y espacio,
+                Constantes.CHANNEL_ID_ADELANTOS
+        );
+    }
+
+    private void notificacionLanzamientosAtrasados() {
+        Manga[] mangasAtrasados;
+        mangasAtrasados = Arrays.stream(mangasComprobacion).filter(man -> {
+            Manga mangaBD = AddedMangasDB.ObtenerUno(man.getId());
+            if(mangaBD == null){
+                Log.e(TAG, "Manga nulo. ID: "+ man.getId());
+                return false;
+            }
+
+            Calendar mangaAntesDeActualizar = Calendar.getInstance();
+            Calendar mangaDespuesDeActualizar = Calendar.getInstance();
+
+            try {
+                mangaAntesDeActualizar.setTime(sdfSinHoras.parse(man.getFecha()));
+                mangaDespuesDeActualizar.setTime(sdfSinHoras.parse(mangaBD.getFecha()));
+
+                return mangaAntesDeActualizar.compareTo(mangaDespuesDeActualizar) > 0;
+            } catch (ParseException e) {
+                Log.e(TAG, e.getMessage());
+                e.printStackTrace();
+                return false;
+            }
+        }).toArray(Manga[]::new);
+
+        Log.d(TAG, "Mangas atrasados = "+mangasAtrasados.length);
+
+        if(mangasAtrasados.length == 0)
+            return;
+
+        String texto = "Se retrasa "+
+                (Arrays.stream(mangasAtrasados).map(Manga::getNombre)
+                        .reduce("",
+                                (ant, prox) -> String.format("%s%s, ", ant, prox)));
+
+        notificaciones.createNotification(
+                mangasAtrasados.length
+                        + " retrasos en mangas próximos al lanzamiento",
                 texto.substring(0, texto.length()-2), //-2 para quitar la , y espacio,
                 Constantes.CHANNEL_ID_RETRASOS
         );
@@ -169,38 +287,7 @@ public class BuscarNuevosLanzamientos extends Service {
         }
     }
 
-    private void ComprobarLanzamientosProximos() {
-        mangasProximos = Arrays.stream(AddedMangasDB.ObtenerNuevosLanzamientos(false))
-                .filter(m -> {
-            Date fechaManga;
-            try {
-                fechaManga = sdfSinHoras.parse(m.getFecha());
-
-                Calendar fecha = Calendar.getInstance();
-                fecha.setTime(fechaManga);
-
-                Long diferencia = ChronoUnit.DAYS.between(fecha.toInstant(),
-                        Calendar.getInstance().toInstant());
-                Log.d("TAG", "Diferencia de días de "+ m.getNombre() + ": \n" + diferencia);
-
-                return diferencia == -5
-                        && Constantes.ObtenerProximaNotificacion().get(Calendar.HOUR_OF_DAY)
-                        == Constantes.horasNotificaciones[Constantes.horasNotificaciones.length-1];
-
-            } catch (ParseException e) {
-                Log.e(TAG, e.getMessage());
-                e.printStackTrace();
-                return false;
-            }
-        }).toArray(Manga[]::new);
-
-        for(Manga m : mangasProximos)
-        {
-            AddedMangasDB.ActualizarFecha(m.getId(), null);
-        }
-
-        Log.d(TAG, "Número de mangas a falta de 5 dias: "+mangasProximos.length);
-    }
+    //endregion
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void CrearAlarma() {

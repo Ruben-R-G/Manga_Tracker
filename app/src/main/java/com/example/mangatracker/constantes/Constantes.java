@@ -8,6 +8,8 @@ public class Constantes {
     public static final String TAG_APP = "MangaTracker - ";
     public static final String CHANNEL_ID = "NuevosLanzamientosChannel";
     public static final String CHANNEL_ID_RETRASOS = "LanzamientosRetrasadosChannel";
+    public static final String CHANNEL_ID_ADELANTOS = "LanzamientosAdelantadosChannel";
+    public static final String CHANNEL_ID_HOY = "LanzamientosHoyChannel";
     public static final int[] horasNotificaciones = {9, 13, 19};
     public static final int[] minutosPruebaNotificaciones = {4, 6, 8};
     public static final String CHANNEL_ID_PRUEBA = "PruebaNuevosLanzamientosChannel";

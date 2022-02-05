@@ -107,6 +107,8 @@ public class Notificaciones {
     public void LanzamientosPrueba() {
         if (!PreferenceManager.getDefaultSharedPreferences(ctx)
                 .getBoolean("notificaciones", false)) return;
+        if (!PreferenceManager.getDefaultSharedPreferences(ctx)
+                .getBoolean("notificacionespruebas", false)) return;
 
         try
         {
