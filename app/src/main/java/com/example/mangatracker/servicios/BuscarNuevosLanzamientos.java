@@ -54,9 +54,6 @@ public class BuscarNuevosLanzamientos extends Service {
     private final String TAG = Constantes.TAG_APP + "BNL";
     private Notificaciones notificaciones;
 
-    //Comprobacion de que los mangas a los que le falte poco tiempo no se hayan retrasado
-    private Manga[] mangasProximos;
-
     //Comprobar cada semana que los mangas con fecha no se hayan adelantado
     private Manga[] mangasComprobacion;
 
@@ -107,8 +104,11 @@ public class BuscarNuevosLanzamientos extends Service {
                 //notificacionProximosLanzamientos();
 
                 //Para los lanzamientos adelantados
-                notificacionLanzamientosAdelantados();
-                notificacionLanzamientosAtrasados();
+                if(mangasComprobacion != null)
+                {
+                    notificacionLanzamientosAdelantados();
+                    notificacionLanzamientosAtrasados();
+                }
 
                 //Para los lanzamiento que se lanzan ese dia
                 notificacionLanzamientosHoy();
@@ -145,9 +145,9 @@ public class BuscarNuevosLanzamientos extends Service {
 
     private void ComprobarMangasConFecha() {
 
-        if(Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
-                == Calendar.SUNDAY
-                &&
+        if(//Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
+            //    == Calendar.SUNDAY
+            //    &&
                 Constantes.ObtenerProximaNotificacion()
                         .get(Calendar.HOUR_OF_DAY)
                         == Constantes.horasNotificaciones[0]
@@ -197,7 +197,7 @@ public class BuscarNuevosLanzamientos extends Service {
                 mangaAntesDeActualizar.setTime(sdfSinHoras.parse(man.getFecha()));
                 mangaDespuesDeActualizar.setTime(sdfSinHoras.parse(mangaBD.getFecha()));
 
-                return mangaAntesDeActualizar.compareTo(mangaDespuesDeActualizar) < 0;
+                return mangaAntesDeActualizar.compareTo(mangaDespuesDeActualizar) > 0;
             } catch (ParseException e) {
                 Log.e(TAG, e.getMessage());
                 e.printStackTrace();
@@ -239,7 +239,7 @@ public class BuscarNuevosLanzamientos extends Service {
                 mangaAntesDeActualizar.setTime(sdfSinHoras.parse(man.getFecha()));
                 mangaDespuesDeActualizar.setTime(sdfSinHoras.parse(mangaBD.getFecha()));
 
-                return mangaAntesDeActualizar.compareTo(mangaDespuesDeActualizar) > 0;
+                return mangaAntesDeActualizar.compareTo(mangaDespuesDeActualizar) < 0;
             } catch (ParseException e) {
                 Log.e(TAG, e.getMessage());
                 e.printStackTrace();
@@ -376,10 +376,11 @@ public class BuscarNuevosLanzamientos extends Service {
                                     .format(nuevosDatos.getFecha()));
                             AddedMangasDB.ActualizarFecha(NuevoLanz.getId(), NuevoLanz.getFecha());
 
-                            if(Arrays.stream(mangasProximos).anyMatch(man -> man.getId()
-                                    == NuevoLanz.getId()))
-                                continue;
-
+                            if(mangasComprobacion != null) {
+                                if (Arrays.stream(mangasComprobacion).anyMatch(man -> man.getId()
+                                        == NuevoLanz.getId()))
+                                    continue;
+                            }
                             TotalNuevosLanzamientos++;
 
                             if (TotalNuevosLanzamientos > 1) {
