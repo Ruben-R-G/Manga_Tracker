@@ -3,6 +3,7 @@
     package="com.example.mangatracker">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
     <application
         android:name="androidx.multidex.MultiDexApplication"
         android:allowBackup="true"
@@ -51,9 +52,10 @@
 
         <receiver
             android:name=".broadcast.NuevosLanzamientosBroadcastReceiver">
+            android:process=":remote"/>
             <intent-filter>
                 <action android:name="android.media.action.DISPLAY_NOTIFICATION" />
-                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>

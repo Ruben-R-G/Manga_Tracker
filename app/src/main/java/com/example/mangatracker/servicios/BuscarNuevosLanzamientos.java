@@ -145,9 +145,9 @@ public class BuscarNuevosLanzamientos extends Service {
 
     private void ComprobarMangasConFecha() {
 
-        if(//Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
-            //    == Calendar.SUNDAY
-            //    &&
+        if(Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
+                == Calendar.SUNDAY
+                &&
                 Constantes.ObtenerProximaNotificacion()
                         .get(Calendar.HOUR_OF_DAY)
                         == Constantes.horasNotificaciones[0]
@@ -336,8 +336,6 @@ public class BuscarNuevosLanzamientos extends Service {
 
                     Log.d(TAG, "Hay " + ms.length + " mangas sin proxima fecha y sin finalizar");
 
-
-
                     Boolean MultiplesLanzamientos = false;
                     int TotalNuevosLanzamientos = 0;
 
@@ -405,7 +403,7 @@ public class BuscarNuevosLanzamientos extends Service {
                         }
                     }
 
-                    return TotalNuevosLanzamientos > 1 ? 1 : TotalNuevosLanzamientos;
+                    return TotalNuevosLanzamientos > 1 ? 2 : TotalNuevosLanzamientos;
 
                 }catch (Exception e)
                 {

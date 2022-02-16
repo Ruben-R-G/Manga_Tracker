@@ -198,4 +198,16 @@ public class AdaptadorRecycler extends RecyclerView.Adapter<AdaptadorRecycler.Vi
     public int getItemCount() {
         return mangas.length;
     }
+
+
+
+    public void Limpiar()
+    {
+        mangas = new Manga[]{};
+    }
+
+    public void LlenarDatos(Manga[] nuevosMangas)
+    {
+        mangas = nuevosMangas;
+    }
 }

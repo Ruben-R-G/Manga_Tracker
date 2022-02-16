@@ -22,7 +22,9 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.os.Handler;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -40,6 +42,7 @@ public class ScrollingActivity extends AppCompatActivity {
     private ActivityScrollingBinding binding;
     private RecyclerView rv;
     private final String TAG = Constantes.TAG_APP + "MA";
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
@@ -59,7 +62,34 @@ public class ScrollingActivity extends AppCompatActivity {
         FloatingActionButton fab = binding.fab;
         fab.setOnClickListener(view -> CambioActividades.CambioAddManga(ScrollingActivity.this));
 
+        swipeRefreshLayout = findViewById(R.id.SwipeRefreshMain);
+
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            ActualizarVista();
+        });
+
+        swipeRefreshLayout.setColorSchemeColors(
+                getResources().getColor(android.R.color.holo_blue_bright),
+                getResources().getColor(android.R.color.holo_green_light),
+                getResources().getColor(android.R.color.holo_orange_light),
+                getResources().getColor(android.R.color.holo_red_light)
+        );
+
         OperacionesRV();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void ActualizarVista() {
+        ((AdaptadorRecycler)rv.getAdapter()).Limpiar();
+        ((AdaptadorRecycler)rv.getAdapter()).LlenarDatos(AddedMangasDB.ObtenerTodos());
+        new Handler().postDelayed(new Runnable() {
+            @Override public void run() {
+                // Stop animation (This will be after 3 seconds)
+                ((AdaptadorRecycler)rv.getAdapter()).notifyDataSetChanged();
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        }, 2000); // Delay in millis
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
