@@ -24,6 +24,7 @@ import com.example.mangatracker.clases.Manga;
 import com.example.mangatracker.constantes.Constantes;
 import com.example.mangatracker.db.AddedMangasDB;
 import com.example.mangatracker.notificaciones.Notificaciones;
+import com.example.mangatracker.webservice.WSLogs;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -77,6 +78,7 @@ public class BuscarNuevosLanzamientos extends Service {
                 notificaciones = new Notificaciones(this);
                 AddedMangasDB.InstaciarBD(this);
                 Log.d(TAG, "onCreate");
+                AddedMangasDB.InsertarLog(TAG, "1.0", "Servicio iniciado");
 
                 //Obtenemos los lanzamientos que se lanzan ese día para mostrar la notificacion
                 ComprobarMangasLanzadosHoy();
@@ -115,10 +117,15 @@ public class BuscarNuevosLanzamientos extends Service {
 
                 notificaciones.LanzamientosPrueba();
             } catch (Exception e) {
+                AddedMangasDB.InsertarLog(TAG, "1.999",
+                        "EXCEPCIÓN NO CONTROLADA: " + e.getMessage());
                 Log.e(TAG, "EXCEPCION NO CONTROLADA: \n" + e.getMessage());
                 mensaje += e.getMessage() + "\n";
             }
             CrearAlarma();
+
+            WSLogs.EnviarLogs();
+
             this.stopSelf(); //Llama al onDestroy
         }).start();
     }
@@ -133,7 +140,6 @@ public class BuscarNuevosLanzamientos extends Service {
                     try {
                             FechaManga = sdfSinHoras.parse(m.getFecha());
                             Calendar hoy = Calendar.getInstance();
-                            //hoy.add(Calendar.DAY_OF_YEAR, -1);
 
                             return FechaManga.before(hoy.getTime());
                     } catch (ParseException e) {
@@ -141,6 +147,9 @@ public class BuscarNuevosLanzamientos extends Service {
                         return false;
                     }
                 }).toArray(Manga[]::new);
+
+        AddedMangasDB.InsertarLog(TAG, "1.1",
+                "Comprobados los mangas lanzados hoy. Número de mangas: " + mangasLanzadosHoy.length);
     }
 
     private void ComprobarMangasConFecha() {
@@ -154,10 +163,14 @@ public class BuscarNuevosLanzamientos extends Service {
         ) //Mangas adelantados
         {
             Log.d(TAG, "Comprobamos todos los mangas");
+
             mangasComprobacion = AddedMangasDB.ObtenerNuevosLanzamientos(false);
             for (Manga m : mangasComprobacion) {
                 AddedMangasDB.ActualizarFecha(m.getId(), null);
             }
+
+            AddedMangasDB.InsertarLog(TAG, "1.2", "Comprobamos todos los mangas con fecha. " +
+                    "Mangas que se han puesto con fecha a null: " + mangasComprobacion.length);
         }
     }
 
@@ -166,12 +179,21 @@ public class BuscarNuevosLanzamientos extends Service {
     //region Notificaciones
 
     private void notificacionLanzamientosHoy() {
+        AddedMangasDB.InsertarLog(TAG, "1.7",
+                "Mangas que salen el día de hoy: " +
+                        (mangasLanzadosHoy == null ? "Objeto mangasLanzadosHoy no esta instanciado" :
+                        mangasLanzadosHoy.length));
+
+        if(mangasLanzadosHoy == null) return;
         if(mangasLanzadosHoy.length == 0) return;
 
         String texto = "Hoy se lanza: \n"+
                 (Arrays.stream(mangasLanzadosHoy).map(Manga::getNombre)
                         .reduce("",
                                 (ant, prox) -> String.format("%s%s, ", ant, prox)));
+
+        AddedMangasDB.InsertarLog(TAG, "1.7.1",
+                "Creamos notificación de mangas que se lanzan hoy: " + texto);
 
         notificaciones.createNotification(
                 (mangasLanzadosHoy.length +
@@ -182,11 +204,17 @@ public class BuscarNuevosLanzamientos extends Service {
     }
 
     private void notificacionLanzamientosAdelantados() {
+        AddedMangasDB.InsertarLog(TAG, "1.5",
+                "Comprobamos mangas que se adelanten");
+
         Manga[] mangasAdelantados;
         mangasAdelantados = Arrays.stream(mangasComprobacion).filter(man -> {
             Manga mangaBD = AddedMangasDB.ObtenerUno(man.getId());
             if(mangaBD == null){
                 Log.e(TAG, "Manga nulo. ID: "+ man.getId());
+                AddedMangasDB.InsertarLog(TAG, "1.5.1",
+                        "Manga nulo. ID: "+ man.getId());
+
                 return false;
             }
 
@@ -207,6 +235,10 @@ public class BuscarNuevosLanzamientos extends Service {
 
         Log.d(TAG, "Mangas adelantados = "+mangasAdelantados.length);
 
+        AddedMangasDB.InsertarLog(TAG, "1.5.2",
+                "Mangas adelantados = "+mangasAdelantados.length);
+
+
         if(mangasAdelantados.length == 0)
             return;
 
@@ -214,6 +246,9 @@ public class BuscarNuevosLanzamientos extends Service {
                 (Arrays.stream(mangasAdelantados).map(Manga::getNombre)
                         .reduce("",
                                 (ant, prox) -> String.format("%s%s, ", ant, prox)));
+
+        AddedMangasDB.InsertarLog(TAG, "1.5.3",
+                "Creamos notificación de mangas adelantados: " +texto);
 
         notificaciones.createNotification(
                 mangasAdelantados.length
@@ -224,11 +259,16 @@ public class BuscarNuevosLanzamientos extends Service {
     }
 
     private void notificacionLanzamientosAtrasados() {
+        AddedMangasDB.InsertarLog(TAG, "1.6",
+                "Comprobamos mangas que se atrasen");
+
         Manga[] mangasAtrasados;
         mangasAtrasados = Arrays.stream(mangasComprobacion).filter(man -> {
             Manga mangaBD = AddedMangasDB.ObtenerUno(man.getId());
             if(mangaBD == null){
                 Log.e(TAG, "Manga nulo. ID: "+ man.getId());
+                AddedMangasDB.InsertarLog(TAG, "1.6.1", "Manga nulo. ID: " + man.getId());
+
                 return false;
             }
 
@@ -248,6 +288,8 @@ public class BuscarNuevosLanzamientos extends Service {
         }).toArray(Manga[]::new);
 
         Log.d(TAG, "Mangas atrasados = "+mangasAtrasados.length);
+        AddedMangasDB.InsertarLog(TAG, "1.6.2",
+                "Mangas atrasados = "+mangasAtrasados.length);
 
         if(mangasAtrasados.length == 0)
             return;
@@ -256,6 +298,10 @@ public class BuscarNuevosLanzamientos extends Service {
                 (Arrays.stream(mangasAtrasados).map(Manga::getNombre)
                         .reduce("",
                                 (ant, prox) -> String.format("%s%s, ", ant, prox)));
+
+        AddedMangasDB.InsertarLog(TAG, "1.6.3",
+                "Creamos notificación de mangas atrasados: " + texto);
+
 
         notificaciones.createNotification(
                 mangasAtrasados.length
@@ -267,17 +313,29 @@ public class BuscarNuevosLanzamientos extends Service {
 
     private void notificacionResultadosNuevosLanzamientos(Integer result) {
         Log.d(TAG, "Resultado: "+result);
+
+
         switch (result)
         {
             case -1:
                 Log.e(TAG, "Error al obtener datos del FutureTask");
+                AddedMangasDB.InsertarLog(TAG, "1.4",
+                        "Resultado: " + result +
+                        ". Error al obtener datos del FutureTask");
                 mensaje += "Error al obtener datos del FutureTask";
                 break;
             case 0:
                 Log.d(TAG, "No hay mangas añadidos");
+                AddedMangasDB.InsertarLog(TAG, "1.4",
+                        "Resultado: " + result +
+                        ". No hay nuevos mangas añadidos");
                 break;
             case 1:
             case 2:
+                AddedMangasDB.InsertarLog(TAG, "1.4",
+                        "Resultado: " + result +
+                                ". Hay nuevos lanzamientos. Se lanza la notificacion");
+
                 notificaciones.createNotification((result == 2 ?
                                 "¡Nuevos lanzamientos!" : "Nuevo lanzamiento: "+mangasNotif[0])
                         , (result == 2 ? "Comprueba los nuevos lanzamientos" :
@@ -295,6 +353,9 @@ public class BuscarNuevosLanzamientos extends Service {
 
         Log.d(TAG, "Proxima notificacion: " + sdf.format(proximaNotificacion.getTime()));
 
+        AddedMangasDB.InsertarLog(TAG, "1.8",
+                "Proxima notificacion: " + sdf.format(proximaNotificacion.getTime()));
+
         //En lugar de destruirse, llamo de nuevo al BroadcastReceiver en x
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 1,
                 new Intent(this, NuevosLanzamientosBroadcastReceiver.class),
@@ -308,6 +369,8 @@ public class BuscarNuevosLanzamientos extends Service {
         } else
             alarmManager.setExact(AlarmManager.RTC_WAKEUP,
                     proximaNotificacion.getTimeInMillis(), pendingIntent);
+
+        AddedMangasDB.InsertarLog(TAG, "1.8.1", "Alarma creada para la siguiente llamada al servicio");
 
     }
 
@@ -335,6 +398,7 @@ public class BuscarNuevosLanzamientos extends Service {
                     if (ms.length == 0) return 0; //No hay mangas sin fecha, no actualizo nada
 
                     Log.d(TAG, "Hay " + ms.length + " mangas sin proxima fecha y sin finalizar");
+                    AddedMangasDB.InsertarLog(TAG, "1.3.0", "Hay " + ms.length + " mangas sin proxima fecha y sin finalizar");
 
                     Boolean MultiplesLanzamientos = false;
                     int TotalNuevosLanzamientos = 0;
@@ -350,6 +414,7 @@ public class BuscarNuevosLanzamientos extends Service {
                         NuevoLanz.setId(m.getId());
                         try {
                             Log.e(TAG, "Buscando datos del id: " + m.getId());
+                            AddedMangasDB.InsertarLog(TAG, "1.3.1", "Buscando datos del id: " + m.getId());
 
                             MangaDatos nuevosDatos = MangaScrapper.ObtenerDatosDe(m.getId());
 
@@ -368,16 +433,31 @@ public class BuscarNuevosLanzamientos extends Service {
                             AddedMangasDB.ActualizarManga(NuevoLanz);
 
                             //Si no se obtiene fecha, no cuenta como nuevo lanzamiento
-                            if (nuevosDatos.getFecha() == null) continue;
+                            if (nuevosDatos.getFecha() == null)
+                            {
+                                AddedMangasDB.InsertarLog(TAG, "1.3.2",
+                                        NuevoLanz.getId() + ": En Preparación: " + NuevoLanz.getTomosEnPreparacion()
+                                                + " / Fecha Lanzamiento: "
+                                                + "No existe");
+                                continue;
+                            }
 
                             NuevoLanz.setFecha(new SimpleDateFormat("dd-MM-yyyy")
                                     .format(nuevosDatos.getFecha()));
                             AddedMangasDB.ActualizarFecha(NuevoLanz.getId(), NuevoLanz.getFecha());
 
+                            AddedMangasDB.InsertarLog(TAG, "1.3.2",
+                                    NuevoLanz.getId() + ": En Preparación: " + NuevoLanz.getTomosEnPreparacion()
+                                            + " / Fecha Lanzamiento: " + NuevoLanz.getFecha());
+
                             if(mangasComprobacion != null) {
                                 if (Arrays.stream(mangasComprobacion).anyMatch(man -> man.getId()
                                         == NuevoLanz.getId()))
+                                {
+                                    AddedMangasDB.InsertarLog(TAG, "1.3.3", NuevoLanz.getId() +
+                                            " es un id para comprobar. No buscamos si es un nuevo lanzamiento. Saltamos esa parte.");
                                     continue;
+                                }
                             }
                             TotalNuevosLanzamientos++;
 
@@ -391,13 +471,18 @@ public class BuscarNuevosLanzamientos extends Service {
                             mangasNotif[1] = NuevoLanz.getFecha();
 
                         } catch (IOException e) {
+                            AddedMangasDB.InsertarLog(TAG, "1.3.99", NuevoLanz.getId() +
+                                    " Error IOException: " + e.getMessage());
                             e.printStackTrace();
                             mensaje += e.getMessage() + "\n";
                         } catch (NoSuchMethodError e) {
-                            Log.e(TAG, "Joder");
+                            AddedMangasDB.InsertarLog(TAG, "1.3.99", NuevoLanz.getId() +
+                                    " Error NoSuchMethodError: " + e.getMessage());
                             e.printStackTrace();
                             mensaje += e.getMessage() + "\n";
                         } catch (Exception e) {
+                            AddedMangasDB.InsertarLog(TAG, "1.3.99", NuevoLanz.getId() +
+                                    " Error Exception: " + e.getMessage());
                             e.printStackTrace();
                             mensaje += e.getMessage() + "\n";
                         }
@@ -407,12 +492,16 @@ public class BuscarNuevosLanzamientos extends Service {
 
                 }catch (Exception e)
                 {
+                    AddedMangasDB.InsertarLog(TAG, "1.3.999",
+                            "Error en la búsqueda de nuevos lanzamientos: " +
+                                    e.getMessage());
                     e.printStackTrace();
                     return -1;
                 }
             }
         };
     }
+
 
 }
 

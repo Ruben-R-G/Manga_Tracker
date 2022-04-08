@@ -11,10 +11,12 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.example.mangatracker.clases.LogManga;
 import com.example.mangatracker.clases.Manga;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -22,9 +24,10 @@ import java.util.List;
 
 public class AddedMangasDB extends SQLiteOpenHelper {
     public static final String NOMBRE_DB = "MangaTracker.db";
-    public static final int VERSION_DB = 1;
+    public static final int VERSION_DB = 2;
     private static AddedMangasDB bd = null;
     private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
+    private static SimpleDateFormat fechaFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss.SSSS");
 
     @Override
     public void onCreate(SQLiteDatabase db) {
@@ -33,11 +36,22 @@ public class AddedMangasDB extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
+        String sql = "CREATE TABLE LOG_MANGAS(" +
+                "ID INTEGER PRIMARY KEY AUTOINCREMENT" +
+                ", CODIGO_TRAMO TEXT" +
+                ", PASO TEXT" +
+                ", EVENTO TEXT" +
+                ", FECHA TEXT)";
+        db.execSQL(sql);
     }
 
     public AddedMangasDB(@Nullable @org.jetbrains.annotations.Nullable Context context) {
         super(context, NOMBRE_DB, null, VERSION_DB);
+    }
+
+    public static AddedMangasDB getContext()
+    {
+        return bd;
     }
 
     public static void InstaciarBD(Context ctx) {
@@ -193,6 +207,7 @@ public class AddedMangasDB extends SQLiteOpenHelper {
         String sql = "SELECT * FROM MANGAS_ADDED WHERE SIGUIENTE_LANZAMIENTO IS NOT NULL ORDER BY FAVORITO DESC";
         Cursor c = bd.getReadableDatabase().rawQuery(sql, null);
 
+
         if (c.moveToFirst()) //Si hay al menos un dato
         {
             do {
@@ -280,4 +295,51 @@ public class AddedMangasDB extends SQLiteOpenHelper {
         return listado.size() > 0 ? listado.toArray(new Manga[]{}) : new Manga[]{};
 
     }
+
+
+
+
+    //region LOG
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public static void InsertarLog(String codigo, String paso, String evento)
+    {
+        String sql = "INSERT INTO LOG_MANGAS (CODIGO_TRAMO, PASO, EVENTO, FECHA) VALUES(" +
+                "'" + codigo + "'" +
+                ",'" + paso + "'" +
+                ",'" + evento + "'" +
+                ",'" + fechaFormat.format(Calendar.getInstance().toInstant()) + "'" +
+                ")";
+
+        bd.getWritableDatabase().execSQL(sql);
+    }
+    
+    
+    public static List<LogManga> ObtenerLogs()
+    {
+        String sql = "SELECT CODIGO_TRAMO, PASO, EVENTO, FECHA FROM LOG_MANGAS ORDER BY ID";
+        List<LogManga> listado = new ArrayList<>();
+
+        Cursor c = bd.getReadableDatabase().rawQuery(sql, null);
+
+        if (c.moveToFirst()) //Si hay al menos un dato
+        {
+            do {
+                String codigo_tramo = c.getString(0);
+                String paso = c.getString(1);
+                String evento = c.getString(2);
+                String fecha = c.getString(3);
+                listado.add(new LogManga(paso, codigo_tramo, fecha, evento));
+            } while (c.moveToNext());
+        }
+        c.close();
+
+        return listado;
+    }
+
+    public static void BorrarLogs()
+    {
+        String sql = "DELETE FROM LOG_MANGAS";
+        bd.getWritableDatabase().execSQL(sql);
+    }
+    //endRegion
 }

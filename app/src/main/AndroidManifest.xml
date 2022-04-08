@@ -51,8 +51,8 @@
         </service>
 
         <receiver
-            android:name=".broadcast.NuevosLanzamientosBroadcastReceiver">
-            android:process=":remote"/>
+            android:name=".broadcast.NuevosLanzamientosBroadcastReceiver"
+            android:process=":remote">
             <intent-filter>
                 <action android:name="android.media.action.DISPLAY_NOTIFICATION" />
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
