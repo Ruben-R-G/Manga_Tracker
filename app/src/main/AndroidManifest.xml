@@ -2,7 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.mangatracker">
     <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <application
         android:name="androidx.multidex.MultiDexApplication"
@@ -42,7 +41,9 @@
 
         <service
             android:name = ".servicios.BuscarNuevosLanzamientos"
-            android:label = "@string/app_name">
+            android:label = "@string/app_name"
+            android:enabled="true"
+            android:process=":remote">
             <intent-filter>
                 <action
                     android:name = "com.example.mangatracker.servicios.BuscarNuevosLanzamientos" />
@@ -52,10 +53,10 @@
 
         <receiver
             android:name=".broadcast.NuevosLanzamientosBroadcastReceiver"
-            android:process=":remote">
+            android:process=":remote"
+            android:enabled="true">
             <intent-filter>
                 <action android:name="android.media.action.DISPLAY_NOTIFICATION" />
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>

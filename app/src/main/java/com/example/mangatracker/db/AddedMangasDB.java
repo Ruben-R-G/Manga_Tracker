@@ -13,6 +13,7 @@ import androidx.annotation.RequiresApi;
 
 import com.example.mangatracker.clases.LogManga;
 import com.example.mangatracker.clases.Manga;
+import com.example.mangatracker.constantes.Constantes;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -21,10 +22,12 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class AddedMangasDB extends SQLiteOpenHelper {
     public static final String NOMBRE_DB = "MangaTracker.db";
     public static final int VERSION_DB = 2;
+    public static final String TAG = Constantes.TAG_APP + "BD";
     private static AddedMangasDB bd = null;
     private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
     private static SimpleDateFormat fechaFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss.SSSS");
@@ -171,7 +174,7 @@ public class AddedMangasDB extends SQLiteOpenHelper {
     public static Manga[] ObtenerTodos() {
         List<Manga> listado = new ArrayList<>();
         String sql = "SELECT * FROM MANGAS_ADDED ORDER BY " +
-                "(TOMOS_EDITADOS - TOMOS_COMPRADOS) DESC, TERMINADO ASC, FAVORITO DESC";
+                "TERMINADO ASC, FAVORITO DESC, (TOMOS_EDITADOS - TOMOS_COMPRADOS) DESC, TOMOS_EN_PREPARACION DESC";
         Cursor c = bd.getReadableDatabase().rawQuery(sql, null);
 
         if (c.moveToFirst()) //Si hay al menos un dato
@@ -206,7 +209,6 @@ public class AddedMangasDB extends SQLiteOpenHelper {
         List<Manga> listado = new ArrayList<>();
         String sql = "SELECT * FROM MANGAS_ADDED WHERE SIGUIENTE_LANZAMIENTO IS NOT NULL ORDER BY FAVORITO DESC";
         Cursor c = bd.getReadableDatabase().rawQuery(sql, null);
-
 
         if (c.moveToFirst()) //Si hay al menos un dato
         {
@@ -303,20 +305,96 @@ public class AddedMangasDB extends SQLiteOpenHelper {
     @RequiresApi(api = Build.VERSION_CODES.O)
     public static void InsertarLog(String codigo, String paso, String evento)
     {
-        String sql = "INSERT INTO LOG_MANGAS (CODIGO_TRAMO, PASO, EVENTO, FECHA) VALUES(" +
-                "'" + codigo + "'" +
-                ",'" + paso + "'" +
-                ",'" + evento + "'" +
-                ",'" + fechaFormat.format(Calendar.getInstance().toInstant()) + "'" +
-                ")";
+        try
+        {
 
-        bd.getWritableDatabase().execSQL(sql);
+            evento = evento.replace('\'', '"');
+
+            String sql = "INSERT INTO LOG_MANGAS (CODIGO_TRAMO, PASO, EVENTO, FECHA) VALUES(" +
+                    "'" + codigo + "'" +
+                    ",'" + paso + "'" +
+                    ",'" + evento + "'" +
+                    ",'" + fechaFormat.format(Calendar.getInstance().getTime()) + "'" +
+                    ")";
+
+            bd.getWritableDatabase().execSQL(sql);
+        }catch (Exception e)
+        {
+            Log.d(TAG, "Error al insertar log. Evento: " + evento);
+            evento = "Error de inserción en logs: Evento con algun caracter erróneo";
+
+            String sql = "INSERT INTO LOG_MANGAS (CODIGO_TRAMO, PASO, EVENTO, FECHA) VALUES(" +
+                    "'" + codigo + "'" +
+                    ",'" + paso + "'" +
+                    ",'" + evento + "'" +
+                    ",'" + fechaFormat.format(Calendar.getInstance().getTime()) + "'" +
+                    ")";
+
+            bd.getWritableDatabase().execSQL(sql);
+        }
+
     }
     
     
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public static List<LogManga> ObtenerLogs()
     {
-        String sql = "SELECT CODIGO_TRAMO, PASO, EVENTO, FECHA FROM LOG_MANGAS ORDER BY ID";
+        List<LogManga> listado = new ArrayList<>();
+
+        int cuenta = ObtenerNumLogs();
+        int id = ObtenerPrimerIdLog();
+
+        if(cuenta == -1 || id == -1)
+        {
+            InsertarLog(TAG + " - LOGS", "1.0", String.format(Locale.getDefault(),"Cuenta (%d) o id (%d) nulos", cuenta, id));
+        }
+
+        while(id <= cuenta)
+        {
+            if(!listado.addAll(ObtenerLogs(id)))
+            {
+                InsertarLog(TAG + " - LOGS", "1.1", "Error al obtener logs de la select");
+            }
+
+            id += 20;
+        }
+
+        return listado;
+    }
+
+    private static int ObtenerPrimerIdLog() {
+        int primerId = -1;
+        String sql = "SELECT ID FROM LOG_MANGAS ORDER BY ID";
+
+        Cursor c = bd.getReadableDatabase().rawQuery(sql, null);
+
+        if(c.moveToFirst())
+        {
+            primerId = c.getInt(0);
+        }
+        c.close();
+        return primerId;
+    }
+
+    private static int ObtenerNumLogs() {
+        int num = -1;
+        String sql = "SELECT COUNT(ID) FROM LOG_MANGAS";
+
+        Cursor c = bd.getReadableDatabase().rawQuery(sql, null);
+
+        if(c.moveToFirst())
+        {
+            num = c.getInt(0);
+        }
+        c.close();
+
+        return num;
+    }
+
+    public static List<LogManga> ObtenerLogs(int id)
+    {
+
+        String sql = "SELECT TOP 20 CODIGO_TRAMO, PASO, EVENTO, FECHA FROM LOG_MANGAS WHERE ID >= " + id + " ORDER BY ID";
         List<LogManga> listado = new ArrayList<>();
 
         Cursor c = bd.getReadableDatabase().rawQuery(sql, null);
