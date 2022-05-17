@@ -7,6 +7,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -36,6 +37,7 @@ public class ActualizarMangaActivity extends AppCompatActivity {
     private TextView txtTomosEnEdicion;
     private TextView txtTomosNoEditados;
     private EditText etTomosComprados;
+    private Switch swHold;
 
     private MenuItem item;
 
@@ -90,8 +92,7 @@ public class ActualizarMangaActivity extends AppCompatActivity {
             mangaActualizar.setTomosEditados(md.getTomosEditados());
 
             if (md.getFecha() != null) {
-                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
-                mangaActualizar.setFecha(simpleDateFormat.format(md.getFecha()));
+                mangaActualizar.setFecha(md.getFecha());
             }
         }else
         {
@@ -115,6 +116,8 @@ public class ActualizarMangaActivity extends AppCompatActivity {
         etTomosComprados.setText(mangaActualizar.getTomosComprados() == -1 ? "0" :
                 Integer.toString(mangaActualizar.getTomosComprados()));
 
+        swHold = findViewById(R.id.swHold);
+        swHold.setChecked(mangaActualizar.getDrop());
     }
 
     @Override
@@ -196,14 +199,17 @@ public class ActualizarMangaActivity extends AppCompatActivity {
     private void UpdateManga() throws NumeroMangasException {
         //Pruebas.getMangasAdded().removeIf((m) -> m.getNombre().equals(mangaActualizar.getNombre()));
         mangaActualizar.setTomosComprados(Integer.parseInt(etTomosComprados.getText().toString()));
+        mangaActualizar.setDrop(swHold.isChecked());
         //Pruebas.getMangasAdded().add(mangaActualizar);
         AddedMangasDB.ActualizarManga(mangaActualizar);
-        AddedMangasDB.ActualizarFecha(mangaActualizar.getId(), mangaActualizar.getFecha());
+//        AddedMangasDB.ActualizarFecha(mangaActualizar.getId(), mangaActualizar.getFecha());
     }
 
     private void AddManga() throws NumeroMangasException {
         String s = "No se ha podido añadir el manga.";
         mangaActualizar.setTomosComprados(Integer.parseInt(etTomosComprados.getText().toString()));
+        mangaActualizar.setDrop(swHold.isChecked());
+
         try {
             AddedMangasDB.InsertarManga(mangaActualizar);
             //if(Pruebas.addManga(mangaActualizar)){

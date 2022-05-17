@@ -54,4 +54,10 @@ public class LogManga {
                 "\"evento=\"" + evento + "\"" +
                 "},";
     }
+
+    public String StringFichero()
+    {
+        return fecha + " - PASO " + paso + " - Codigo Tramo: "
+                + codigo_tramo + ": " + evento + "\n\n";
+    }
 }

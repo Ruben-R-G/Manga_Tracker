@@ -19,9 +19,23 @@
             android:id="@+id/txtViewNombre"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_weight="8"
             android:text="Nombre"
             android:textSize="20sp"
             android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/imgVHold"
+            android:layout_width="@dimen/img_width"
+            android:layout_height="@dimen/img_height"
+            app:srcCompat="@drawable/pause" />
+
+        <ImageView
+            android:id="@+id/imgVTerminado"
+            android:layout_width="@dimen/img_width"
+            android:layout_height="@dimen/img_height"
+            app:srcCompat="@drawable/finish" />
+
     </LinearLayout>
 
     <LinearLayout

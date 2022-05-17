@@ -15,6 +15,7 @@ public class Constantes {
     public static final String CHANNEL_ID_PRUEBA = "PruebaNuevosLanzamientosChannel";
     public static final SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
     public static final SimpleDateFormat sdfSinHoras = new SimpleDateFormat("dd-MM-yyyy");
+    public static final String ficheroLogs = "MangaLogs.txt";
 
 
     public static Calendar ObtenerProximaNotificacion() {

@@ -3,6 +3,7 @@ package com.example.mangatracker.db;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.CursorWindow;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
@@ -15,6 +16,7 @@ import com.example.mangatracker.clases.LogManga;
 import com.example.mangatracker.clases.Manga;
 import com.example.mangatracker.constantes.Constantes;
 
+import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
@@ -29,8 +31,6 @@ public class AddedMangasDB extends SQLiteOpenHelper {
     public static final int VERSION_DB = 2;
     public static final String TAG = Constantes.TAG_APP + "BD";
     private static AddedMangasDB bd = null;
-    private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
-    private static SimpleDateFormat fechaFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss.SSSS");
 
     @Override
     public void onCreate(SQLiteDatabase db) {
@@ -52,8 +52,7 @@ public class AddedMangasDB extends SQLiteOpenHelper {
         super(context, NOMBRE_DB, null, VERSION_DB);
     }
 
-    public static AddedMangasDB getContext()
-    {
+    public static AddedMangasDB getContext() {
         return bd;
     }
 
@@ -91,15 +90,17 @@ public class AddedMangasDB extends SQLiteOpenHelper {
     public static void InsertarManga(Manga m) {
         m.setNombre(m.getNombre().replace("'", "''"));
         String sql = String.format(
-                "INSERT INTO MANGAS_ADDED VALUES (%d, '%s', %d, %d, %d, %d, %s, %d, 0, 0)",
+                "INSERT INTO MANGAS_ADDED VALUES (%d, '%s', %d, %d, %d, %d, %s, %d, %d, %d)",
                 m.getId(),
                 m.getNombre(),
                 m.getTomosEditados(),
                 m.getTomosEnPreparacion(),
                 m.getTomosNoEditados(),
                 m.getTomosComprados(),
-                m.getFecha() == null ? "NULL" : "'"+ m.getFecha() +"'",
-                m.getTerminado()
+                m.getFecha() == null ? "NULL" : "'" + m.getFecha() + "'",
+                m.getTerminado() ? 1 : 0,
+                m.getFav() ? 1 : 0,
+                m.getDrop() ? 1 : 0
         );
 
         bd.getWritableDatabase().execSQL(sql);
@@ -117,17 +118,24 @@ public class AddedMangasDB extends SQLiteOpenHelper {
                         "TOMOS_EN_PREPARACION = %d," +
                         "TOMOS_NO_EDITADOS = %d," +
                         "TOMOS_COMPRADOS = %d," +
-                        "TERMINADO = %d" +
+                        "SIGUIENTE_LANZAMIENTO = %s," +
+                        "TERMINADO = %d," +
+                        "FAVORITO = %d," +
+                        "DROPPEADO = %d" +
                         " WHERE ID = %d",
                 m.getTomosEditados(),
                 m.getTomosEnPreparacion(),
                 m.getTomosNoEditados(),
                 m.getTomosComprados(),
-                m.getTerminado(),
+                (m.getFecha() == null ? "null" : Constantes.sdfSinHoras.format(m.getFecha())),
+                m.getTerminado() ? 1 : 0,
+                m.getFav() ? 1 : 0,
+                m.getDrop() ? 1 : 0,
                 m.getId()
         );
         bd.getWritableDatabase().execSQL(sql);
     }
+
 
     public static void HacerFavorito(int id) {
         String sql = "UPDATE MANGAS_ADDED SET FAVORITO = 1 WHERE ID=" + id;
@@ -139,9 +147,9 @@ public class AddedMangasDB extends SQLiteOpenHelper {
         bd.getWritableDatabase().execSQL(sql);
     }
 
-    public static void ActualizarFecha(int id, String nuevaFecha) {
+    public static void ActualizarFecha(int id, Date nuevaFecha) {
         String sql = "UPDATE MANGAS_ADDED SET SIGUIENTE_LANZAMIENTO = " + (nuevaFecha != null
-                ? "'" + nuevaFecha + "'" : "NULL")
+                ? "'" + Constantes.sdfSinHoras.format(nuevaFecha) + "'" : "NULL")
                 + " WHERE ID=" + id;
         bd.getWritableDatabase().execSQL(sql);
     }
@@ -153,18 +161,27 @@ public class AddedMangasDB extends SQLiteOpenHelper {
 
         if (c.moveToFirst()) //Si hay al menos un dato
         {
-                String nombre = c.getString(1);
-                int edit = c.getInt(2);
-                int prep = c.getInt(3);
-                int noedit = c.getInt(4);
-                int comp = c.getInt(5);
-                String fecha = c.getString(6);
-                int terminado = c.getInt(7);
-                int fav = c.getInt(8);
-                int drop = c.getInt(9);
+            String nombre = c.getString(1);
+            int edit = c.getInt(2);
+            int prep = c.getInt(3);
+            int noedit = c.getInt(4);
+            int comp = c.getInt(5);
+            Date fecha = null;
+            if (c.getString(6) != null) {
+                try {
+                    fecha = Constantes.sdfSinHoras.parse(c.getString(6));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            boolean terminado = c.getInt(7) == 1;
+            boolean fav = c.getInt(8) == 1;
+            boolean drop = c.getInt(9) == 1;
 
-                c.close();
-                return new Manga(id, nombre, edit, prep, noedit, comp, fecha, terminado, fav, drop);
+            c.close();
+            return new Manga(id, nombre, edit, prep, noedit, comp, fecha, terminado, fav, drop);
         }
         c.close();
         return null;
@@ -174,7 +191,7 @@ public class AddedMangasDB extends SQLiteOpenHelper {
     public static Manga[] ObtenerTodos() {
         List<Manga> listado = new ArrayList<>();
         String sql = "SELECT * FROM MANGAS_ADDED ORDER BY " +
-                "TERMINADO ASC, FAVORITO DESC, (TOMOS_EDITADOS - TOMOS_COMPRADOS) DESC, TOMOS_EN_PREPARACION DESC";
+                "TERMINADO ASC, DROPPEADO ASC, FAVORITO DESC, (TOMOS_EDITADOS - TOMOS_COMPRADOS) DESC, TOMOS_EN_PREPARACION DESC";
         Cursor c = bd.getReadableDatabase().rawQuery(sql, null);
 
         if (c.moveToFirst()) //Si hay al menos un dato
@@ -186,10 +203,20 @@ public class AddedMangasDB extends SQLiteOpenHelper {
                 int prep = c.getInt(3);
                 int noedit = c.getInt(4);
                 int comp = c.getInt(5);
-                String fecha = c.getString(6);
-                int terminado = c.getInt(7);
-                int fav = c.getInt(8);
-                int drop = c.getInt(9);
+                Date fecha = null;
+                if (c.getString(6) != null) {
+                    try {
+
+                        fecha = Constantes.sdfSinHoras.parse(c.getString(6));
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                boolean terminado = c.getInt(7) == 1;
+                boolean fav = c.getInt(8) == 1;
+                boolean drop = c.getInt(9) == 1;
 
                 listado.add(new Manga(id, nombre, edit, prep, noedit, comp, fecha, terminado, fav, drop));
             } while (c.moveToNext());
@@ -201,6 +228,7 @@ public class AddedMangasDB extends SQLiteOpenHelper {
 
     /**
      * Obtiene los mangas que tienen proxima fecha de lanzamiento
+     *
      * @param actualizar False: Obtiene los datos. True: Obtiene los datos y actualiza las fechas
      * @return El listado de mangas
      */
@@ -215,14 +243,18 @@ public class AddedMangasDB extends SQLiteOpenHelper {
             do {
                 int id = c.getInt(0);
                 String nombre = c.getString(1);
-                String fecha = c.getString(6);
+                Date fecha = null;
+                try {
+                    fecha = Constantes.sdfSinHoras.parse(c.getString(6));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
                 listado.add(new Manga(id, nombre, fecha));
             } while (c.moveToNext());
         }
         c.close();
 
-        if(actualizar)
-        {
+        if (actualizar) {
             ComprobarFechasManga(listado);
         }
 
@@ -234,22 +266,17 @@ public class AddedMangasDB extends SQLiteOpenHelper {
     @RequiresApi(api = Build.VERSION_CODES.N)
     private static void OrdenarMangas(List<Manga> listado) {
         listado.sort((m1, m2) -> {
-            try {
-                if(m1.getFecha() == null || m2.getFecha() == null){
-                    if(m1.getFecha() == null && m2.getFecha() == null)
-                        return 0;
-                    if(m1.getFecha() == null && m2.getFecha() != null)
-                        return 1;
-                    if(m1.getFecha() != null && m2.getFecha() == null)
-                        return -1;
-                }
-                return simpleDateFormat.parse(m1.getFecha()).before(simpleDateFormat.parse(m2.getFecha())) ? -1:
-                        simpleDateFormat.parse(m1.getFecha()).after(simpleDateFormat.parse(m2.getFecha())) ? 1:
-                                0;
-            } catch (ParseException e) {
-                e.printStackTrace();
-                return 0;
+            if (m1.getFecha() == null || m2.getFecha() == null) {
+                if (m1.getFecha() == null && m2.getFecha() == null)
+                    return 0;
+                if (m1.getFecha() == null && m2.getFecha() != null)
+                    return 1;
+                if (m1.getFecha() != null && m2.getFecha() == null)
+                    return -1;
             }
+            return m1.getFecha().before(m2.getFecha()) ? -1 :
+                    m1.getFecha().after(m2.getFecha()) ? 1 :
+                            0;
         });
     }
 
@@ -257,30 +284,26 @@ public class AddedMangasDB extends SQLiteOpenHelper {
     private static void ComprobarFechasManga(List<Manga> listado) {
         Date FechaManga;
         List<Integer> idMangasEliminar = new ArrayList<>();
-        try {
-            for (Manga m : listado) {
-                FechaManga = simpleDateFormat.parse(m.getFecha());
-                Calendar hoy = Calendar.getInstance();
-                //hoy.add(Calendar.DAY_OF_YEAR, -1);
+        for (Manga m : listado) {
+            FechaManga = m.getFecha();
+            Calendar hoy = Calendar.getInstance();
+            //hoy.add(Calendar.DAY_OF_YEAR, -1);
 
-                if (FechaManga.before(hoy.getTime())) {
-                    ActualizarFecha(m.getId(), null);
-                    //listado.removeIf(manga-> m.getId() == manga.getId());
-                    idMangasEliminar.add(m.getId());
-                }
+            if (FechaManga.before(hoy.getTime())) {
+                ActualizarFecha(m.getId(), null);
+                //listado.removeIf(manga-> m.getId() == manga.getId());
+                idMangasEliminar.add(m.getId());
             }
-
-
-            listado.removeIf(manga -> idMangasEliminar.contains(manga.getId()));
-        } catch (ParseException e) {
-            e.printStackTrace();
         }
+
+        listado.removeIf(manga -> idMangasEliminar.contains(manga.getId()));
 
     }
 
     public static Manga[] ActualizarNuevosLanzamientos() {
         List<Manga> listado = new ArrayList<>();
-        String sql = "SELECT * FROM MANGAS_ADDED WHERE SIGUIENTE_LANZAMIENTO IS NULL AND TERMINADO = 0 ORDER BY FAVORITO DESC";
+        String sql = "SELECT * FROM MANGAS_ADDED WHERE SIGUIENTE_LANZAMIENTO" +
+                " IS NULL AND TERMINADO = 0 ORDER BY FAVORITO DESC";
         Cursor c = bd.getReadableDatabase().rawQuery(sql, null);
 
         if (c.moveToFirst()) //Si hay al menos un dato
@@ -288,9 +311,26 @@ public class AddedMangasDB extends SQLiteOpenHelper {
             do {
                 int id = c.getInt(0);
                 String nombre = c.getString(1);
-                String fecha = c.getString(6);
-                int tomosComprados = c.getInt(5);
-                listado.add(new Manga(id, nombre, fecha, tomosComprados));
+                int edit = c.getInt(2);
+                int prep = c.getInt(3);
+                int noedit = c.getInt(4);
+                int comp = c.getInt(5);
+                Date fecha = null;
+                if (c.getString(6) != null) {
+                    try {
+
+                        fecha = Constantes.sdfSinHoras.parse(c.getString(6));
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                boolean terminado = c.getInt(7) == 1;
+                boolean fav = c.getInt(8) == 1;
+                boolean drop = c.getInt(9) == 1;
+
+                listado.add(new Manga(id, nombre, edit, prep, noedit, comp, fecha, terminado, fav, drop));
             } while (c.moveToNext());
         }
         c.close();
@@ -298,15 +338,17 @@ public class AddedMangasDB extends SQLiteOpenHelper {
 
     }
 
-
+    public static void ActualizarMangas(List<Manga> mangas) {
+        for (Manga m : mangas) {
+            ActualizarManga(m);
+        }
+    }
 
 
     //region LOG
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public static void InsertarLog(String codigo, String paso, String evento)
-    {
-        try
-        {
+    public static void InsertarLog(String codigo, String paso, String evento) {
+        try {
 
             evento = evento.replace('\'', '"');
 
@@ -314,12 +356,11 @@ public class AddedMangasDB extends SQLiteOpenHelper {
                     "'" + codigo + "'" +
                     ",'" + paso + "'" +
                     ",'" + evento + "'" +
-                    ",'" + fechaFormat.format(Calendar.getInstance().getTime()) + "'" +
+                    ",'" + Constantes.sdf.format(Calendar.getInstance().getTime()) + "'" +
                     ")";
 
             bd.getWritableDatabase().execSQL(sql);
-        }catch (Exception e)
-        {
+        } catch (Exception e) {
             Log.d(TAG, "Error al insertar log. Evento: " + evento);
             evento = "Error de inserción en logs: Evento con algun caracter erróneo";
 
@@ -327,78 +368,28 @@ public class AddedMangasDB extends SQLiteOpenHelper {
                     "'" + codigo + "'" +
                     ",'" + paso + "'" +
                     ",'" + evento + "'" +
-                    ",'" + fechaFormat.format(Calendar.getInstance().getTime()) + "'" +
+                    ",'" + Constantes.sdf.format(Calendar.getInstance().getTime()) + "'" +
                     ")";
 
             bd.getWritableDatabase().execSQL(sql);
         }
 
     }
-    
-    
+
+
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public static List<LogManga> ObtenerLogs()
-    {
+    public static List<LogManga> ObtenerLogs() {
         List<LogManga> listado = new ArrayList<>();
-
-        int cuenta = ObtenerNumLogs();
-        int id = ObtenerPrimerIdLog();
-
-        if(cuenta == -1 || id == -1)
-        {
-            InsertarLog(TAG + " - LOGS", "1.0", String.format(Locale.getDefault(),"Cuenta (%d) o id (%d) nulos", cuenta, id));
-        }
-
-        while(id <= cuenta)
-        {
-            if(!listado.addAll(ObtenerLogs(id)))
-            {
-                InsertarLog(TAG + " - LOGS", "1.1", "Error al obtener logs de la select");
-            }
-
-            id += 20;
-        }
-
-        return listado;
-    }
-
-    private static int ObtenerPrimerIdLog() {
-        int primerId = -1;
-        String sql = "SELECT ID FROM LOG_MANGAS ORDER BY ID";
+        String sql = "SELECT CODIGO_TRAMO, PASO, EVENTO, FECHA FROM LOG_MANGAS ORDER BY ID";
 
         Cursor c = bd.getReadableDatabase().rawQuery(sql, null);
-
-        if(c.moveToFirst())
-        {
-            primerId = c.getInt(0);
+        try {
+            Field field = CursorWindow.class.getDeclaredField("sCursorWindowSize");
+            field.setAccessible(true);
+            field.set(null, 100 * 1024 * 1024); //the 100MB is the new size
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        c.close();
-        return primerId;
-    }
-
-    private static int ObtenerNumLogs() {
-        int num = -1;
-        String sql = "SELECT COUNT(ID) FROM LOG_MANGAS";
-
-        Cursor c = bd.getReadableDatabase().rawQuery(sql, null);
-
-        if(c.moveToFirst())
-        {
-            num = c.getInt(0);
-        }
-        c.close();
-
-        return num;
-    }
-
-    public static List<LogManga> ObtenerLogs(int id)
-    {
-
-        String sql = "SELECT TOP 20 CODIGO_TRAMO, PASO, EVENTO, FECHA FROM LOG_MANGAS WHERE ID >= " + id + " ORDER BY ID";
-        List<LogManga> listado = new ArrayList<>();
-
-        Cursor c = bd.getReadableDatabase().rawQuery(sql, null);
-
         if (c.moveToFirst()) //Si hay al menos un dato
         {
             do {
@@ -414,8 +405,36 @@ public class AddedMangasDB extends SQLiteOpenHelper {
         return listado;
     }
 
-    public static void BorrarLogs()
-    {
+    public static List<LogManga> ObtenerLogs(int id) {
+
+        String sql = "SELECT CODIGO_TRAMO, PASO, EVENTO, FECHA FROM LOG_MANGAS WHERE ID >= " +
+                "" + id + " ORDER BY ID";
+        List<LogManga> listado = new ArrayList<>();
+
+        Cursor c = bd.getReadableDatabase().rawQuery(sql, null);
+        try {
+            Field field = CursorWindow.class.getDeclaredField("sCursorWindowSize");
+            field.setAccessible(true);
+            field.set(null, 100 * 1024 * 1024); //the 100MB is the new size
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (c.moveToFirst()) //Si hay al menos un dato
+        {
+            do {
+                String codigo_tramo = c.getString(0);
+                String paso = c.getString(1);
+                String evento = c.getString(2);
+                String fecha = c.getString(3);
+                listado.add(new LogManga(paso, codigo_tramo, fecha, evento));
+            } while (c.moveToNext());
+        }
+        c.close();
+
+        return listado;
+    }
+
+    public static void BorrarLogs() {
         String sql = "DELETE FROM LOG_MANGAS";
         bd.getWritableDatabase().execSQL(sql);
     }

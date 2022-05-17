@@ -37,13 +37,13 @@ public class Pruebas {
 
     public static Manga[] PruebaNuevosLanzamientos()
     {
-        mangas = new Manga[]{
-                new Manga(1,"prueba 1", "12/03/21"),
-                new Manga(2,"prueba 2", "12/03/21"),
-                new Manga(3,"prueba 3", "12/03/21"),
-                new Manga(4,"prueba 4", "14/06/97")
-        };
+//        mangas = new Manga[]{
+//                new Manga(1,"prueba 1", "12/03/21"),
+//                new Manga(2,"prueba 2", "12/03/21"),
+//                new Manga(3,"prueba 3", "12/03/21"),
+//                new Manga(4,"prueba 4", "14/06/97")
+//        };
 
-        return mangas;
+        return null;
     }
 }

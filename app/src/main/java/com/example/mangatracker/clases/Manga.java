@@ -3,6 +3,7 @@ package com.example.mangatracker.clases;
 import com.example.mangatracker.Excepciones.NumeroMangasException;
 
 import java.io.Serializable;
+import java.util.Date;
 
 public class Manga implements Serializable {
     private int id;
@@ -11,14 +12,15 @@ public class Manga implements Serializable {
     private int tomosEnPreparacion;
     private int tomosNoEditados;
     private int tomosComprados;
-    private String fecha;
-    private int terminado;
-    private int fav;
-    private int drop;
+    private Date fecha;
+    private boolean terminado;
+    private boolean fav;
+    private boolean drop;
 
 
     public Manga(int id, String nombre, int tomosEditados, int tomosEnPreparacion,
-                 int tomosNoEditados, int tomosComprados, String fecha, int terminado, int fav, int drop) {
+                 int tomosNoEditados, int tomosComprados, Date fecha,
+                 boolean terminado, boolean fav, boolean drop) {
         this.id = id;
         this.nombre = nombre;
         this.tomosEditados = tomosEditados;
@@ -31,52 +33,53 @@ public class Manga implements Serializable {
         this.drop = drop;
     }
 
-    public Manga(int id, String nombre, String fecha) {
+    public Manga(int id, String nombre, Date fecha) {
         this.id = id;
         this.nombre = nombre;
         this.fecha = fecha;
     }
 
-    public Manga(int id, String nombre, String fecha, int tomosComprados) {
+    public Manga(int id, String nombre, Date fecha, int tomosComprados) {
         this.id = id;
         this.nombre = nombre;
         this.fecha = fecha;
         this.tomosComprados = tomosComprados;
     }
 
-    public String getFecha() {
+    public Date getFecha() {
         return fecha;
     }
 
-    public void setFecha(String fecha) {
+    public void setFecha(Date fecha) {
         this.fecha = fecha;
     }
 
-    public int getFav() {
+    public boolean getFav() {
         return fav;
     }
 
-    public void setFav(int fav) {
+    public void setFav(boolean fav) {
         this.fav = fav;
     }
 
-    public int getDrop() {
+    public boolean getDrop() {
         return drop;
     }
 
-    public void setDrop(int drop) {
+    public void setDrop(boolean drop) {
         this.drop = drop;
     }
 
-    public int getTerminado() {
+    public boolean getTerminado() {
         return terminado;
     }
 
-    public void setTerminado(int terminado) {
+    public void setTerminado(boolean terminado) {
         this.terminado = terminado;
     }
 
-    public Manga(String nombre, int tomosEditados, int tomosEnPreparacion, int tomosNoEditados) {
+    public Manga(String nombre, int tomosEditados, int tomosEnPreparacion,
+                 int tomosNoEditados) {
         this.nombre = nombre;
         this.tomosEditados = tomosEditados;
         this.tomosEnPreparacion = tomosEnPreparacion;
@@ -84,7 +87,8 @@ public class Manga implements Serializable {
         tomosComprados = -1;
     }
 
-    public Manga(String nombre, int tomosEditados, int tomosEnPreparacion, int tomosNoEditados, int tomosComprados) {
+    public Manga(String nombre, int tomosEditados, int tomosEnPreparacion,
+                 int tomosNoEditados, int tomosComprados) {
         this.nombre = nombre;
         this.tomosEditados = tomosEditados;
         this.tomosEnPreparacion = tomosEnPreparacion;
@@ -148,7 +152,8 @@ public class Manga implements Serializable {
         if(tomosComprados > tomosEditados)
         {
             throw new NumeroMangasException(
-                    "El número de mangas comprados no puede ser superior al número de mangas editados");
+                    String.format("El número de mangas comprados (%d) no puede ser superior " +
+                            "al número de mangas editados (%d)", tomosComprados, tomosEditados));
         }
         this.tomosComprados = tomosComprados;
 
@@ -156,5 +161,21 @@ public class Manga implements Serializable {
 
     public void SumaRestaUno(boolean Suma) throws NumeroMangasException {
         setTomosComprados(getTomosComprados() + (Suma ? 1 : -1));
+    }
+
+    @Override
+    public String toString() {
+        return
+                "{\"id\":" + id +
+                ", \"nombre\":\"" + nombre + '\"' +
+                ", \"tomosEditados\":" + tomosEditados +
+                ", \"tomosEnPreparacion\":" + tomosEnPreparacion +
+                ", \"tomosNoEditados\":" + tomosNoEditados +
+                ", \"tomosComprados\":" + tomosComprados +
+                ", \"fecha\":" + (fecha == null ? "null" : "\"" + fecha + "\"") +
+                ", \"terminado\":" + terminado +
+                ", \"fav\":" + fav +
+                ", \"drop\":" + drop +
+                "},";
     }
 }

@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,6 +19,7 @@ import com.example.mangatracker.R;
 import com.example.mangatracker.ScrollingActivity;
 import com.example.mangatracker.casosuso.CambioActividades;
 import com.example.mangatracker.clases.Manga;
+import com.example.mangatracker.constantes.Constantes;
 import com.example.mangatracker.db.AddedMangasDB;
 import com.example.mangatracker.pruebas.Pruebas;
 
@@ -52,6 +54,8 @@ public class AdaptadorRecycler extends RecyclerView.Adapter<AdaptadorRecycler.Vi
         private final ImageButton btnEditar;
         private final TextView NlNombre;
         private final TextView NlFecha;
+        private final ImageView Terminado;
+        private final ImageView Hold;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -66,6 +70,8 @@ public class AdaptadorRecycler extends RecyclerView.Adapter<AdaptadorRecycler.Vi
             btnEditar = itemView.findViewById(R.id.mangaitemEditar);
             NlNombre = itemView.findViewById(R.id.TvNlItem);
             NlFecha = itemView.findViewById(R.id.TvNlFecha);
+            Terminado = itemView.findViewById(R.id.imgVTerminado);
+            Hold = itemView.findViewById(R.id.imgVHold);
         }
 
         public TextView getNombreAddManga() {
@@ -111,6 +117,9 @@ public class AdaptadorRecycler extends RecyclerView.Adapter<AdaptadorRecycler.Vi
         public TextView getNlFecha() {
             return NlFecha;
         }
+
+        public ImageView getTerminado(){return Terminado;}
+        public ImageView getHold(){return Hold;}
     }
 
     public AdaptadorRecycler(TIPOADAPTER tipo, Manga[] mangas) {
@@ -154,11 +163,21 @@ public class AdaptadorRecycler extends RecyclerView.Adapter<AdaptadorRecycler.Vi
                 holder.getTomosEditados().setText(Integer.toString(mangas[position].getTomosEditados()));
                 holder.getTomosEnPreparacion().setText(Integer.toString(mangas[position].getTomosEnPreparacion()));
                 holder.getTomosNoEditados().setText(Integer.toString(mangas[position].getTomosNoEditados()));
+                holder.getTerminado().setVisibility((mangas[position].getTerminado() ? View.VISIBLE
+                        : View.GONE));
+                holder.getHold().setVisibility((mangas[position].getDrop() ? View.VISIBLE
+                        : View.GONE));
                 CrearListenersTomosComprados(holder, mangas[position]);
                 break;
             case NuevosLanzamientosActivity:
                 holder.getNlNombre().setText(mangas[position].getNombre());
-                holder.getNlFecha().setText(mangas[position].getFecha());
+                try{
+                    holder.getNlFecha().setText(Constantes.sdfSinHoras.format(
+                            mangas[position].getFecha()));
+                }catch(Exception e)
+                {
+                    holder.getNlFecha().setText("??????");
+                }
                 break;
         }
 

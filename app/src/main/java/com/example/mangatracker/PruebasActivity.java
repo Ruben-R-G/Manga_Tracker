@@ -4,6 +4,7 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,13 +13,17 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 import androidx.preference.PreferenceManager;
 
 import com.example.mangatracker.broadcast.NuevosLanzamientosBroadcastReceiver;
 import com.example.mangatracker.constantes.Constantes;
 import com.example.mangatracker.databinding.PruebasBinding;
+import com.example.mangatracker.db.AddedMangasDB;
 import com.example.mangatracker.notificaciones.Notificaciones;
+import com.example.mangatracker.webservice.WSLogs;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -27,7 +32,7 @@ public class PruebasActivity extends AppCompatActivity {
     PruebasBinding binding;
     Notificaciones notificaciones;
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,7 +45,7 @@ public class PruebasActivity extends AppCompatActivity {
         CrearEventos();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private void CrearEventos() {
         binding.PruebasBtnLanzarNotificacion.setOnClickListener(l ->
                 notificaciones.LanzamientosPrueba());
@@ -50,8 +55,59 @@ public class PruebasActivity extends AppCompatActivity {
 
         binding.pruebasBtnLanzarServicioInmediato.setOnClickListener(l ->
                 IniciarServicio(true));
+
+        binding.btnBorrarLogs.setOnClickListener(l -> BorrarLogs());
+
+        binding.btnCrearFicheroLog.setOnClickListener(l ->
+                WSLogs.EnviarLogs(this.getApplicationContext()));
+
+        binding.btnVerFicheroLog.setOnClickListener(l -> VerFicheroLog());
+
+        binding.btnEnviarLogs.setOnClickListener(l -> EnviarLogs());
     }
 
+    private void EnviarLogs() {
+        Uri uri = getUriDeFichero(Constantes.ficheroLogs);
+
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("text/plain");
+        intent.putExtra(Intent.EXTRA_EMAIL, new String[] {"r.rodriguezgarlito@gmail.com"});
+        intent.putExtra(Intent.EXTRA_SUBJECT, "Fichero de logs");
+
+        intent.putExtra(Intent.EXTRA_STREAM, uri);
+        startActivity(Intent.createChooser(intent, "Enviar correo..."));
+    }
+
+    private void VerFicheroLog() {
+        try {
+            Uri uri = getUriDeFichero(Constantes.ficheroLogs);
+            String mime = getContentResolver().getType(uri);
+
+            Intent i = new Intent();
+            i.setAction(Intent.ACTION_VIEW);
+            i.setDataAndType(uri, mime);
+            i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(i);
+
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private Uri getUriDeFichero(String fichero) {
+        File file = new File(this.getApplicationContext().getFilesDir(), fichero);
+
+        Uri uri = FileProvider.getUriForFile(this,
+                this.getApplication().getPackageName() + ".fileprovider", file);
+        return uri;
+    }
+
+    private void BorrarLogs() {
+        AddedMangasDB.InstaciarBD(getApplicationContext());
+        AddedMangasDB.BorrarLogs();
+
+        Toast.makeText(this, "Logs eliminados", Toast.LENGTH_LONG).show();
+    }
 
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -79,6 +135,6 @@ public class PruebasActivity extends AppCompatActivity {
 
         Toast.makeText(this, "Se lanzara la notificacion a las "
                 +sdf.format(proximaNotificacion.getTime()), Toast.LENGTH_LONG).show();
-        Log.e(TAG, "Lanzando servicio a las "+ sdf.format(proximaNotificacion.getTime()));
+        Log.e(TAG, "Lanzando servicio a las "+ Constantes.sdf.format(proximaNotificacion.getTime()));
     }
 }

@@ -7,6 +7,46 @@
     tools:context=".PruebasActivity">
 
     <Button
+        android:id="@+id/btnEnviarLogs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="Enviar Fichero de Logs"
+        app:layout_constraintBottom_toTopOf="@+id/btnVerFicheroLog"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/btnVerFicheroLog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="Ver Fichero de Logs"
+        app:layout_constraintBottom_toTopOf="@+id/btnCrearFicheroLog"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/btnCrearFicheroLog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="Crear Fichero de Logs"
+        app:layout_constraintBottom_toTopOf="@+id/btnBorrarLogs"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/btnBorrarLogs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="Borrar Logs"
+        app:layout_constraintBottom_toTopOf="@+id/PruebasBtnLanzarNotificacion"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
         android:id="@+id/PruebasBtnLanzarNotificacion"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -21,24 +61,21 @@
         android:id="@+id/PruebasBtnLanzarServicio"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="128dp"
+        android:layout_marginTop="8dp"
         android:text="Lanzar Servicio en 2 Minutos"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/pruebasBtnLanzarServicioInmediato" />
 
     <Button
         android:id="@+id/pruebasBtnLanzarServicioInmediato"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="128dp"
+        android:layout_marginTop="8dp"
         android:text="Lanzar Servicio Ahora"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.383" />
+        app:layout_constraintTop_toBottomOf="@+id/PruebasBtnLanzarNotificacion" />
 
     <TextView
         android:id="@+id/PruebasTxtVDesc"
