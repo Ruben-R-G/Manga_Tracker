@@ -76,6 +76,8 @@ public class ScrollingActivity extends AppCompatActivity {
         );
 
         OperacionesRV();
+
+        Permisos.GestionarOptimizacionBateria(this);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)

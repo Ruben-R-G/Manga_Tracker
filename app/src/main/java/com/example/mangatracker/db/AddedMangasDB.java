@@ -28,7 +28,7 @@ import java.util.Locale;
 
 public class AddedMangasDB extends SQLiteOpenHelper {
     public static final String NOMBRE_DB = "MangaTracker.db";
-    public static final int VERSION_DB = 2;
+    public static final int VERSION_DB = 3;
     public static final String TAG = Constantes.TAG_APP + "BD";
     private static AddedMangasDB bd = null;
 
@@ -84,7 +84,13 @@ public class AddedMangasDB extends SQLiteOpenHelper {
                 "NUM_TOMO INTEGER" +
                 ")";
         db.execSQL(sql);
-
+        sql = "CREATE TABLE LOG_MANGAS(" +
+                "ID INTEGER PRIMARY KEY AUTOINCREMENT" +
+                ", CODIGO_TRAMO TEXT" +
+                ", PASO TEXT" +
+                ", EVENTO TEXT" +
+                ", FECHA TEXT)";
+        db.execSQL(sql);
     }
 
     public static void InsertarManga(Manga m) {
@@ -97,8 +103,8 @@ public class AddedMangasDB extends SQLiteOpenHelper {
                 m.getTomosEnPreparacion(),
                 m.getTomosNoEditados(),
                 m.getTomosComprados(),
-                m.getFecha() == null ? "NULL" : "'" + m.getFecha() + "'",
-                m.getTerminado() ? 1 : 0,
+                (m.getFecha() != null
+                        ? "'" + Constantes.sdfSinHoras.format(m.getFecha()) + "'" : "NULL"),                m.getTerminado() ? 1 : 0,
                 m.getFav() ? 1 : 0,
                 m.getDrop() ? 1 : 0
         );
@@ -127,7 +133,8 @@ public class AddedMangasDB extends SQLiteOpenHelper {
                 m.getTomosEnPreparacion(),
                 m.getTomosNoEditados(),
                 m.getTomosComprados(),
-                (m.getFecha() == null ? "null" : Constantes.sdfSinHoras.format(m.getFecha())),
+                (m.getFecha() != null
+                        ? "'" + Constantes.sdfSinHoras.format(m.getFecha()) + "'" : "NULL"),
                 m.getTerminado() ? 1 : 0,
                 m.getFav() ? 1 : 0,
                 m.getDrop() ? 1 : 0,

@@ -92,7 +92,7 @@ public class ActualizarMangaActivity extends AppCompatActivity {
             mangaActualizar.setTomosEditados(md.getTomosEditados());
 
             if (md.getFecha() != null) {
-                mangaActualizar.setFecha(md.getFecha());
+                mangaActualizar.setFecha( md.getFecha());
             }
         }else
         {

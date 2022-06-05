@@ -94,6 +94,33 @@ public class PruebasActivity extends AppCompatActivity {
         }
     }
 
+    private void BorrarLogs() {
+        AddedMangasDB.InstaciarBD(getApplicationContext());
+        AddedMangasDB.BorrarLogs();
+
+        File ficheroLogs = new File(this.getApplicationContext().getFilesDir(),
+                Constantes.ficheroLogs);
+
+        try{
+            if(ficheroLogs.exists())
+            {
+                if(!ficheroLogs.delete())
+                {
+                    Toast.makeText(this, "No se ha podido eliminar fichero de logs",
+                            Toast.LENGTH_LONG).show();
+
+                }
+            }
+        }catch(Exception e)
+        {
+            Toast.makeText(this, "No se ha podido eliminar fichero de logs",
+                    Toast.LENGTH_LONG).show();
+        }
+
+
+        Toast.makeText(this, "Logs eliminados", Toast.LENGTH_LONG).show();
+    }
+
     private Uri getUriDeFichero(String fichero) {
         File file = new File(this.getApplicationContext().getFilesDir(), fichero);
 
@@ -102,12 +129,6 @@ public class PruebasActivity extends AppCompatActivity {
         return uri;
     }
 
-    private void BorrarLogs() {
-        AddedMangasDB.InstaciarBD(getApplicationContext());
-        AddedMangasDB.BorrarLogs();
-
-        Toast.makeText(this, "Logs eliminados", Toast.LENGTH_LONG).show();
-    }
 
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)

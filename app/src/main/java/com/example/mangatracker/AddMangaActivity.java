@@ -67,9 +67,8 @@ public class AddMangaActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        //todo meter en activity result
-        binding.btnBuscar.callOnClick();
-
+        if(mangas.size() != 0)
+            MostrarMangasBuscados();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -103,17 +102,7 @@ public class AddMangaActivity extends AppCompatActivity {
                         mangas.add(m);
                     }
 
-                    QuitarMangasAdded();
-
-                    runOnUiThread(() -> {
-                        ((AdaptadorRecycler)binding.addMangaRecycler.getAdapter())
-                                .ActualizarMangas(AdaptadorRecycler.TIPOADAPTER.AddManga,
-                                        mangas.toArray(new Manga[]{}));
-
-                        binding.addMangaRecycler.getAdapter().notifyDataSetChanged();
-
-                        progressBar.setVisibility(View.GONE);
-                    });
+                    MostrarMangasBuscados();
 
                 } catch (IOException e) {
                     Toast.makeText(v.getContext(), "Ha ocurrido un error al buscar", Toast.LENGTH_LONG).show();
@@ -127,6 +116,21 @@ public class AddMangaActivity extends AppCompatActivity {
 
         OperacionesRV();
 
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void MostrarMangasBuscados() {
+        QuitarMangasAdded();
+
+        runOnUiThread(() -> {
+            ((AdaptadorRecycler)binding.addMangaRecycler.getAdapter())
+                    .ActualizarMangas(AdaptadorRecycler.TIPOADAPTER.AddManga,
+                            mangas.toArray(new Manga[]{}));
+
+            binding.addMangaRecycler.getAdapter().notifyDataSetChanged();
+
+            progressBar.setVisibility(View.GONE);
+        });
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
