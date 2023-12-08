@@ -198,7 +198,7 @@ public class AddedMangasDB extends SQLiteOpenHelper {
     public static Manga[] ObtenerTodos() {
         List<Manga> listado = new ArrayList<>();
         String sql = "SELECT * FROM MANGAS_ADDED ORDER BY " +
-                "(TOMOS_EDITADOS - TOMOS_COMPRADOS) DESC, TERMINADO ASC, DROPPEADO ASC, FAVORITO DESC, TOMOS_EN_PREPARACION DESC";
+                "DROPPEADO ASC, (TOMOS_EDITADOS - TOMOS_COMPRADOS) DESC, TERMINADO ASC, FAVORITO DESC, TOMOS_EN_PREPARACION DESC";
         Cursor c = bd.getReadableDatabase().rawQuery(sql, null);
 
         if (c.moveToFirst()) //Si hay al menos un dato
