@@ -198,7 +198,7 @@ public class AddedMangasDB extends SQLiteOpenHelper {
     public static Manga[] ObtenerTodos() {
         List<Manga> listado = new ArrayList<>();
         String sql = "SELECT * FROM MANGAS_ADDED ORDER BY " +
-                "TERMINADO ASC, DROPPEADO ASC, FAVORITO DESC, (TOMOS_EDITADOS - TOMOS_COMPRADOS) DESC, TOMOS_EN_PREPARACION DESC";
+                "(TOMOS_EDITADOS - TOMOS_COMPRADOS) DESC, TERMINADO ASC, DROPPEADO ASC, FAVORITO DESC, TOMOS_EN_PREPARACION DESC";
         Cursor c = bd.getReadableDatabase().rawQuery(sql, null);
 
         if (c.moveToFirst()) //Si hay al menos un dato
@@ -355,31 +355,32 @@ public class AddedMangasDB extends SQLiteOpenHelper {
     //region LOG
     @RequiresApi(api = Build.VERSION_CODES.O)
     public static void InsertarLog(String codigo, String paso, String evento) {
-        try {
-
-            evento = evento.replace('\'', '"');
-
-            String sql = "INSERT INTO LOG_MANGAS (CODIGO_TRAMO, PASO, EVENTO, FECHA) VALUES(" +
-                    "'" + codigo + "'" +
-                    ",'" + paso + "'" +
-                    ",'" + evento + "'" +
-                    ",'" + Constantes.sdf.format(Calendar.getInstance().getTime()) + "'" +
-                    ")";
-
-            bd.getWritableDatabase().execSQL(sql);
-        } catch (Exception e) {
-            Log.d(TAG, "Error al insertar log. Evento: " + evento);
-            evento = "Error de inserción en logs: Evento con algun caracter erróneo";
-
-            String sql = "INSERT INTO LOG_MANGAS (CODIGO_TRAMO, PASO, EVENTO, FECHA) VALUES(" +
-                    "'" + codigo + "'" +
-                    ",'" + paso + "'" +
-                    ",'" + evento + "'" +
-                    ",'" + Constantes.sdf.format(Calendar.getInstance().getTime()) + "'" +
-                    ")";
-
-            bd.getWritableDatabase().execSQL(sql);
-        }
+        return;
+//        try {
+//
+//            evento = evento.replace('\'', '"');
+//
+//            String sql = "INSERT INTO LOG_MANGAS (CODIGO_TRAMO, PASO, EVENTO, FECHA) VALUES(" +
+//                    "'" + codigo + "'" +
+//                    ",'" + paso + "'" +
+//                    ",'" + evento + "'" +
+//                    ",'" + Constantes.sdf.format(Calendar.getInstance().getTime()) + "'" +
+//                    ")";
+//
+//            bd.getWritableDatabase().execSQL(sql);
+//        } catch (Exception e) {
+//            Log.d(TAG, "Error al insertar log. Evento: " + evento);
+//            evento = "Error de inserción en logs: Evento con algun caracter erróneo";
+//
+//            String sql = "INSERT INTO LOG_MANGAS (CODIGO_TRAMO, PASO, EVENTO, FECHA) VALUES(" +
+//                    "'" + codigo + "'" +
+//                    ",'" + paso + "'" +
+//                    ",'" + evento + "'" +
+//                    ",'" + Constantes.sdf.format(Calendar.getInstance().getTime()) + "'" +
+//                    ")";
+//
+//            bd.getWritableDatabase().execSQL(sql);
+//        }
 
     }
 

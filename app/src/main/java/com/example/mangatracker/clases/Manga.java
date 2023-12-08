@@ -148,16 +148,7 @@ public class Manga implements Serializable {
         return tomosComprados;
     }
 
-    public void setTomosComprados(int tomosComprados) throws NumeroMangasException {
-        if(tomosComprados > tomosEditados)
-        {
-            throw new NumeroMangasException(
-                    String.format("El número de mangas comprados (%d) no puede ser superior " +
-                            "al número de mangas editados (%d)", tomosComprados, tomosEditados));
-        }
-        this.tomosComprados = tomosComprados;
-
-    }
+    public void setTomosComprados(int tomosComprados) { this.tomosComprados = tomosComprados; }
 
     public void SumaRestaUno(boolean Suma) throws NumeroMangasException {
         setTomosComprados(getTomosComprados() + (Suma ? 1 : -1));

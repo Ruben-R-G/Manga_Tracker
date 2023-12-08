@@ -1,8 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="8pt">
+
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="8pt">
+
+        <TextView
+            android:id="@+id/actualizarmanga_tvMangaFinalizado"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Manga Finalizado"
+            android:textStyle="bold"
+            android:visibility="gone" />
+    </TableRow>
 
     <TableRow
         android:layout_width="match_parent"
@@ -74,7 +90,7 @@
 
     <TableRow
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="60dp"
         android:layout_marginBottom="8pt">
 
         <Switch
@@ -82,5 +98,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="En pausa:" />
+
     </TableRow>
 </TableLayout>

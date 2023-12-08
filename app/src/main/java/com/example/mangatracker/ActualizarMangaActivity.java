@@ -1,5 +1,6 @@
 package com.example.mangatracker;
 
+import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -118,6 +119,11 @@ public class ActualizarMangaActivity extends AppCompatActivity {
 
         swHold = findViewById(R.id.swHold);
         swHold.setChecked(mangaActualizar.getDrop());
+
+        if (mangaActualizar.getTerminado())
+        {
+            findViewById(R.id.actualizarmanga_tvMangaFinalizado).setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
@@ -141,16 +147,27 @@ public class ActualizarMangaActivity extends AppCompatActivity {
                 break;
             case R.id.menuactualizarmanga_insertar:
                 try {
-                    OperacionSegunActivityPadre();
-                }catch(NumberFormatException e){
+                    mangaActualizar.setTomosComprados(Integer.parseInt(etTomosComprados.getText().toString()));
+                    mangaActualizar.setDrop(swHold.isChecked());
+
+                    if (mangaActualizar.getTomosComprados() > mangaActualizar.getTomosEditados())
+                    {
+                        new AlertDialog.Builder(this)
+                                .setMessage("Has indicado mas mangas comprados que los editados.\n\n¿Quieres continuar?")
+                                .setPositiveButton("Sí", (dialogInterface, i) -> OperacionSegunActivityPadre())
+                                .setNegativeButton("No", null)
+                                .show();
+                    }
+                    else
+                    {
+                        OperacionSegunActivityPadre();
+                    }
+
+                }catch(NumberFormatException e) {
                     Toast.makeText(this, "Debes introducir un número válido para los mangas comprados",
                             Toast.LENGTH_LONG).show();
                     break;
-                } catch (NumeroMangasException e) {
-                    Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
-                    break;
                 }
-                finish();
                 break;
             case R.id.menuactualizarmangaBorrar:
                 BorrarItem();
@@ -184,37 +201,32 @@ public class ActualizarMangaActivity extends AppCompatActivity {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private void OperacionSegunActivityPadre() throws NumeroMangasException {
-        switch (actividadPadre){
+    private void OperacionSegunActivityPadre() {
+        switch (actividadPadre) {
             case "AddMangaActivity":
                 AddManga();
                 break;
             case "ScrollingActivity":
-                UpdateManga();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    UpdateManga();
+                }
                 break;
         }
+        finish();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private void UpdateManga() throws NumeroMangasException {
-        //Pruebas.getMangasAdded().removeIf((m) -> m.getNombre().equals(mangaActualizar.getNombre()));
-        mangaActualizar.setTomosComprados(Integer.parseInt(etTomosComprados.getText().toString()));
-        mangaActualizar.setDrop(swHold.isChecked());
-        //Pruebas.getMangasAdded().add(mangaActualizar);
+    private void UpdateManga() {
         AddedMangasDB.ActualizarManga(mangaActualizar);
-//        AddedMangasDB.ActualizarFecha(mangaActualizar.getId(), mangaActualizar.getFecha());
     }
 
-    private void AddManga() throws NumeroMangasException {
+    private void AddManga() {
         String s = "No se ha podido añadir el manga.";
-        mangaActualizar.setTomosComprados(Integer.parseInt(etTomosComprados.getText().toString()));
-        mangaActualizar.setDrop(swHold.isChecked());
 
         try {
             AddedMangasDB.InsertarManga(mangaActualizar);
-            //if(Pruebas.addManga(mangaActualizar)){
+
             s = "Manga añadido con éxito";
-            // }
         }catch(Exception e){
             Log.e(TAG, "ERROR: \n"+e.getMessage());
             s += "\n Error: "+e.getMessage();

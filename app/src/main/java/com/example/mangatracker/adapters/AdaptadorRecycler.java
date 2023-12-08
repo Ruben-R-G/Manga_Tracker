@@ -1,5 +1,8 @@
 package com.example.mangatracker.adapters;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -189,9 +192,28 @@ public class AdaptadorRecycler extends RecyclerView.Adapter<AdaptadorRecycler.Vi
         holder.getTomosComprados().setText(Integer.toString(mangas1.getTomosComprados()));
 
         holder.getBtnMasUno().setOnClickListener(v -> {
-            CambiarTomosComprados(mangas1, true);
+            if (mangas1.getTomosComprados() >= mangas1.getTomosEditados())
+            {
+                new AlertDialog.Builder(v.getContext())
+                        .setMessage("Estas intentando añadir más tomos comprados de los que hay editados.\n\n¿Estás seguro?")
+                        .setPositiveButton("Sí", (dialogInterface, i) -> {
+                            CambiarTomosComprados(mangas1, true);
+                        })
+                        .setNegativeButton("No", null)
+                        .show();
+            }
+            else
+            {
+                CambiarTomosComprados(mangas1, true);
+            }
+
         });
         holder.getBtnMenosUno().setOnClickListener(v -> {
+            if (mangas1.getTomosComprados() == 0)
+            {
+                Toast.makeText(v.getContext(), "Ya tienes 0 tomos comprados", Toast.LENGTH_LONG).show();
+                return;
+            }
             CambiarTomosComprados(mangas1, false);
         });
         holder.getBtnEditar().setOnClickListener(v -> {
@@ -204,8 +226,6 @@ public class AdaptadorRecycler extends RecyclerView.Adapter<AdaptadorRecycler.Vi
     private void CambiarTomosComprados(Manga mangas1, boolean b) {
         try {
             mangas1.SumaRestaUno(b);
-            //Pruebas.getMangasAdded().removeIf(m -> m.getNombre().equals(mangas1));
-            //Pruebas.getMangasAdded().add(mangas1);
             AddedMangasDB.ActualizarManga(mangas1);
             notifyDataSetChanged();
         } catch (NumeroMangasException e) {
